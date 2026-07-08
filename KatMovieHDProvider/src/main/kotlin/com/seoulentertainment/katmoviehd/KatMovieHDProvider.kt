@@ -1,7 +1,7 @@
 package com.seoulentertainment.katmoviehd
 
-import com.seoulentertainment.app.*
-import com.seoulentertainment.app.utils.*
+import com.lagradost.cloudstream3.*
+import com.lagradost.cloudstream3.utils.*
 import org.jsoup.nodes.Element
 import android.util.Log
 import com.lagradost.nicehttp.NiceResponse
@@ -11,8 +11,8 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.async
 import org.json.JSONObject
 import org.json.JSONArray
-import com.seoulentertainment.app.network.WebViewResolver
-import com.seoulentertainment.app.extractors.Gofile
+import com.lagradost.cloudstream3.network.WebViewResolver
+
 
 class KatMovieHDProvider : MainAPI() {
     companion object {

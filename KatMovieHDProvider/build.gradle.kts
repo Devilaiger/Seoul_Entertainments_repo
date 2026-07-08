@@ -18,4 +18,5 @@ cloudstream {
         "TvSeries"
     )
     requiresResources = false
+    iconUrl = "https://github.com/Devilaiger/Seoul_Entertainments_repo/raw/refs/heads/master/KatMovieHDProvider/icon.png"
 }

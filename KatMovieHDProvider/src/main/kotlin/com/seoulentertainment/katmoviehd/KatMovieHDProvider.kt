@@ -23,7 +23,8 @@ class KatMovieHDProvider : MainAPI() {
             "https://new.katmoviehd.top",
             "https://katmoviehd.to",
             "https://katmoviehd.sx",
-            "https://katmoviehd.nl"
+            "https://katmoviehd.nl",
+            "https://new.katdrama.my",
         )
 
         private suspend fun resolveUrl(force: Boolean = false): String {

@@ -1,0 +1,8 @@
+{
+  "name": "Seoul Entertainments Repo",
+  "description": "Consolidated Premium Extensions",
+  "manifestVersion": 1,
+  "pluginLists": [
+    "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/plugins.json"
+  ]
+}

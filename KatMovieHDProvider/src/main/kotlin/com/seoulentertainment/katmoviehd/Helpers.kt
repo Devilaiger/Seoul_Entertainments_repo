@@ -1,9 +1,9 @@
 package com.seoulentertainment.katmoviehd
 
-import com.seoulentertainment.app.utils.ExtractorLink
-import com.seoulentertainment.app.utils.ExtractorLinkType
-import com.seoulentertainment.app.utils.newExtractorLink
-import com.seoulentertainment.app.app
+import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.ExtractorLinkType
+import com.lagradost.cloudstream3.utils.newExtractorLink
+import com.lagradost.cloudstream3.app
 import org.json.JSONObject
 import android.util.Log
 

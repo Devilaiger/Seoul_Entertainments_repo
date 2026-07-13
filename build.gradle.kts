@@ -125,8 +125,8 @@ subprojects {
         val implementation = configurations.getByName("implementation")
         val compileOnly = configurations.getByName("compileOnly")
 
-        // Stubs for all Cloudstream classes dynamically resolved based on Gradle user home
-        val cloudstreamJar = File(gradle.gradleUserHomeDir, "caches/cloudstream/cloudstream/cloudstream.jar")
+        // Stubs for all Cloudstream classes resolved relative to root project libs directory
+        val cloudstreamJar = File(rootProject.projectDir, "libs/cloudstream.jar")
         apk(files(cloudstreamJar))
         compileOnly(files(cloudstreamJar))
 

@@ -1,10 +1,10 @@
 [
     {
         "iconUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo/raw/refs/heads/master/KatMovieHDProvider/icon.png",
-        "fileHash": "sha256-d33fde11cea3654230f5fe536b8a5df8ab1fa2c44e071cfd5c1b34b529c2bea6",
+        "fileHash": "sha256-c2dad1060879f081cdedf2e744d2d7aa0d23d4e1c50b8f19c5b473db337ecf2b",
         "apiVersion": 1,
         "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
-        "fileSize": 82345,
+        "fileSize": 82304,
         "status": 1,
         "language": "en",
         "authors": [
@@ -14,10 +14,55 @@
             "Movie",
             "TvSeries"
         ],
-        "version": 1,
+        "version": 2,
         "internalName": "KatMovieHDProvider",
         "description": "KatMovieHD Provider (In-House)",
         "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/KatMovieHDProvider.cs3",
         "name": "KatMovieHDProvider"
+    },
+    {
+        "fileHash": "sha256-f97a42e9c0b71486559be8dae480d3cc4330d374c673dc65251c8b23e03f9149",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
+        "fileSize": 41486,
+        "status": 1,
+        "language": "bn",
+        "authors": [
+            "seoulentertainments"
+        ],
+        "tvTypes": [
+            "Movie",
+            "TvSeries"
+        ],
+        "version": 2,
+        "internalName": "MovieLinkBDProvider",
+        "description": "MovieLinkBD Provider",
+        "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/MovieLinkBDProvider.cs3",
+        "name": "MovieLinkBDProvider"
+    },
+    {
+        "iconUrl": "https://www.google.com/s2/favicons?domain=www.mxplayer.in&sz=%size%",
+        "jarFileSize": 509429,
+        "fileHash": "sha256-32d0a412abd720aa44922494433750b3c18a8951dce81bfb46d7cc7640206b32",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
+        "fileSize": 93586,
+        "status": 1,
+        "language": "hi",
+        "authors": [
+            "seoulentertainments"
+        ],
+        "tvTypes": [
+            "AsianDrama",
+            "TvSeries",
+            "Movie"
+        ],
+        "version": 7,
+        "internalName": "MPlayerProvider",
+        "jarUrl": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/MPlayerProvider.jar",
+        "description": "Indian Movies/Series/Kdrama(Hindi Dubbed)",
+        "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/MPlayerProvider.cs3",
+        "name": "MPlayerProvider",
+        "jarHash": "sha256-6a88ea6369b1b2c5c50a6bb39ab764ba5cfe9de45f210489cb75c5cf4812afa2"
     }
 ]

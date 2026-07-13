@@ -897,7 +897,7 @@ class MovieLinkBDProvider : MainAPI() {
     }
 
     private val cfClient by lazy {
-        val killer = com.seoulentertainment.app.network.CloudflareKiller()
+        val killer = com.lagradost.cloudstream3.network.CloudflareKiller()
         com.lagradost.cloudstream3.app.baseClient.newBuilder()
             .addInterceptor(killer)
             .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)

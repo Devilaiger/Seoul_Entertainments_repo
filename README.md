@@ -42,7 +42,7 @@ If the one-click method does not work:
 | --- | --- | --- |
 | **KatMovieHD** | English / Multi | Premium high-quality movies and TV Series. |
 | **MPlayer** | Hindi / Multi | Indian Movies/Series/Kdrama(Hindi Dubbed). |
-| **MovieLinkBD** | Bengali | MovieLinkBD Provider. |
+| **MovieLinkBD** | Multi | MovieLinkBD Provider. |
 
 ---
 

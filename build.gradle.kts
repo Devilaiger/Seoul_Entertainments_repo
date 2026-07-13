@@ -104,13 +104,13 @@ subprojects {
         }
 
         compileOptions {
-            sourceCompatibility = JavaVersion.VERSION_1_8
-            targetCompatibility = JavaVersion.VERSION_1_8
+            sourceCompatibility = JavaVersion.VERSION_17
+            targetCompatibility = JavaVersion.VERSION_17
         }
 
         tasks.withType<KotlinJvmCompile> {
             compilerOptions {
-                jvmTarget.set(JvmTarget.JVM_1_8) // Required
+                jvmTarget.set(JvmTarget.JVM_17) // Required
                 freeCompilerArgs.addAll(
                     "-Xno-call-assertions",
                     "-Xno-param-assertions",
@@ -125,9 +125,10 @@ subprojects {
         val implementation = configurations.getByName("implementation")
         val compileOnly = configurations.getByName("compileOnly")
 
-        // Stubs for all Cloudstream classes
-        apk(files("C:/Users/Anurag/.gradle/caches/cloudstream/cloudstream/cloudstream.jar"))
-        compileOnly(files("C:/Users/Anurag/.gradle/caches/cloudstream/cloudstream/cloudstream.jar"))
+        // Stubs for all Cloudstream classes dynamically resolved based on Gradle user home
+        val cloudstreamJar = File(gradle.gradleUserHomeDir, "caches/cloudstream/cloudstream/cloudstream.jar")
+        apk(files(cloudstreamJar))
+        compileOnly(files(cloudstreamJar))
 
         // these dependencies can include any of those which are added by the app,
         // but you dont need to include any of them if you dont need them

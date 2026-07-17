@@ -46,6 +46,26 @@ fun getSecret(key: String, fallback: String = ""): String {
         ?: fallback
 }
 
+fun getSubprojectNamespace(project: Project): String {
+    val kotlinSrcDir = project.file("src/main/kotlin")
+    if (kotlinSrcDir.exists()) {
+        val packageDir = kotlinSrcDir.walkTopDown().filter { it.isDirectory && it.listFiles()?.any { f -> f.extension == "kt" } == true }.firstOrNull()
+        if (packageDir != null) {
+            val relativePath = packageDir.relativeTo(kotlinSrcDir).path.replace(File.separatorChar, '.')
+            if (relativePath.isNotEmpty()) return relativePath
+        }
+    }
+    val javaSrcDir = project.file("src/main/java")
+    if (javaSrcDir.exists()) {
+        val packageDir = javaSrcDir.walkTopDown().filter { it.isDirectory && it.listFiles()?.any { f -> f.extension == "java" } == true }.firstOrNull()
+        if (packageDir != null) {
+            val relativePath = packageDir.relativeTo(javaSrcDir).path.replace(File.separatorChar, '.')
+            if (relativePath.isNotEmpty()) return relativePath
+        }
+    }
+    return "com.seoulentertainments.${project.name.lowercase().replace("provider", "").replace(" ", "").replace("-", "")}"
+}
+
 fun Project.cloudstream(configuration: CloudstreamExtension.() -> Unit) = extensions.getByName<CloudstreamExtension>("cloudstream").configuration()
 
 fun Project.android(configuration: BaseExtension.() -> Unit) = extensions.getByName<BaseExtension>("android").configuration()
@@ -61,7 +81,7 @@ subprojects {
     }
 
     android {
-        namespace = "com.cncverse"
+        namespace = getSubprojectNamespace(project)
         (this as? com.android.build.gradle.LibraryExtension)?.buildFeatures?.buildConfig = true
 
         defaultConfig {

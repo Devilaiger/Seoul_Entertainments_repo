@@ -1,0 +1,212 @@
+// ! Bu araç @ByAyzen tarafından | @cs-karma için yazılmıştır.
+
+package com.byayzen
+
+import org.jsoup.nodes.Element
+import com.seoulentertainment.app.*
+import com.seoulentertainment.app.utils.*
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
+
+class OKRU : MainAPI() {
+    override var mainUrl = "https://ok.ru"
+    override var name = "OKRu"
+    override val hasMainPage = true
+    override var lang = "en"
+    override val hasQuickSearch = false
+    override val supportedTypes = setOf(TvType.Movie, TvType.TvSeries)
+
+    override val mainPage = mainPageOf(
+        "${mainUrl}/video/showcase" to "Videos",
+        "${mainUrl}/video/kino/soviet" to "Soviet",
+        "${mainUrl}/video/kino/drama" to "Drama",
+        "${mainUrl}/video/kino/action" to "Action",
+        "${mainUrl}/video/kino/family" to "Family",
+        "${mainUrl}/video/kino/comedy" to "Comedy Movies",
+        "${mainUrl}/video/serial" to "Series",
+    )
+
+    override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
+        val tag = request.data.substringAfterLast("/")
+        val isSerial = request.data.contains("serial")
+        val isShowcase = request.data.contains("showcase")
+        var document = app.get(request.data).document
+        var lastElement = if (isShowcase) "18" else "1669805881145"
+
+        if (page > 1) {
+            val postUrl = if (isShowcase) {
+                "$mainUrl/video/showcase?st.cmd=anonymVideo&st.m=SHOWCASE&st.ft=showcase&st.furl=%2Fvideo%2Fshowcase&cmd=VideoUniversalContentBlock"
+            } else {
+                "$mainUrl/video/serial?st.cmd=anonymVideo&st.fltag=$tag&st.m=ALBUMS_CATALOG&st.ft=serial&st.furl=%2Fvideo%2Fserial%2F$tag&cmd=VideoUniversalContentBlock"
+            }
+
+            val response = app.post(
+                postUrl,
+                data = mapOf(
+                    "fetch" to "false",
+                    "st.page" to page.toString(),
+                    "st.lastelem" to lastElement,
+                    "gwt.requested" to "9579ea2eT1774883610506"
+                ),
+                headers = mapOf(
+                    "ok-screen" to "anonymVideo",
+                    "X-Requested-With" to "XMLHttpRequest"
+                )
+            )
+            lastElement = response.headers["lastelem"] ?: lastElement
+            document = response.document
+        }
+
+        val resultsList = mutableListOf<SearchResponse>()
+
+        if (isSerial) {
+            document.select("video-channels-vitrine-slider").forEach { slider ->
+                val props = slider.attr("data-props")
+                val regex = Regex("""\{"id":"(.*?)".*?"href":"(.*?)","name":"(.*?)","imageUrl":"(.*?)"""")
+                regex.findAll(props).forEach { match ->
+                    val href = fixUrl(match.groupValues[2].replace("\\u0026", "&"))
+                    val name = match.groupValues[3]
+                    val poster = match.groupValues[4].replace("\\u0026", "&")
+                    resultsList.add(newTvSeriesSearchResponse(name, href, TvType.TvSeries) {
+                        this.posterUrl = poster
+                    })
+                }
+            }
+        } else {
+            document.select("div.ugrid_i.js-seen-item-movie").forEach { item ->
+                val card = item.selectFirst("div.video-card") ?: return@forEach
+                val titleElement = card.selectFirst("a.video-card_n")
+                val linkElement = card.selectFirst("a.video-card_lk")
+                val imgElement = card.selectFirst("img.video-card_img")
+
+                val name = titleElement?.text() ?: return@forEach
+                val href = fixUrl(linkElement?.attr("href") ?: return@forEach)
+                val poster = imgElement?.attr("src") ?: ""
+
+                resultsList.add(newMovieSearchResponse(name, href, TvType.Movie) {
+                    this.posterUrl = poster
+                })
+            }
+        }
+
+        val finalResults = resultsList.distinctBy { it.url }
+
+        return newHomePageResponse(
+            list = HomePageList(
+                name = request.name,
+                list = finalResults,
+                isHorizontalImages = true
+            ),
+            hasNext = finalResults.isNotEmpty()
+        )
+    }
+
+    override suspend fun search(query: String, page: Int): SearchResponseList {
+        var searchdata: SearchData? = null
+
+        if (page == 1) {
+            val response = app.post("$mainUrl/video/search?st.cmd=video&st.psft=showcase&st.m=SEARCH&st.ft=search&st.fuvh=on&st.furl=%2Fvideo%2Fshowcase&cmd=VideoContentBlock", data = mapOf("st.v.sq" to query, "gwt.requested" to "9579ea2eT1774883610506")).document
+            val jsonstr = response.selectFirst("video-search-result")?.attr("data-props")
+            if (!jsonstr.isNullOrEmpty()) searchdata = AppUtils.parseJson<SearchData>(jsonstr)
+        } else {
+            val offset = (page - 1) * 30
+            val reqbodystring = """{"id": $page,"parameters": {"displayMode": "Movie","videosOffset": $offset,"channelsOffset": 0,"searchQuery": "$query","currentStateId": "video","durationType": "ANY","hd": false}}"""
+            val jsonstr = app.post("$mainUrl/web-api/v2/video/fetchSearchResult", headers = mapOf("Accept" to "application/json, text/javascript, */*; q=0.01", "ok-screen" to "anonymVideo", "x-client-flags" to "ms:0;dcss:0;mpv2:1;dz:0"), requestBody = reqbodystring.toRequestBody("text/plain;charset=UTF-8".toMediaTypeOrNull())).text
+            if (jsonstr.isNotEmpty()) searchdata = AppUtils.parseJson<ApiSearchResponse>(jsonstr).result
+        }
+
+        val results = searchdata?.videos?.list?.mapNotNull { item ->
+            val title = item.movie?.title ?: item.name ?: return@mapNotNull null
+            val id = item.movie?.id ?: return@mapNotNull null
+            val poster = item.movie.thumbnail?.big ?: item.movie?.thumbnail?.small ?: item.imageUrl
+            newMovieSearchResponse(title, "$mainUrl/video/$id", TvType.Movie) {
+                this.posterUrl = fixUrlNull(poster) }
+        } ?: emptyList()
+
+        return newSearchResponseList(results, hasNext = searchdata?.videos?.hasMore == true)
+    }
+
+    override suspend fun quickSearch(query: String): List<SearchResponse>? = search(query)
+
+    override suspend fun load(url: String): LoadResponse? {
+        val idmatch = Regex("""video/(\d+)""").find(url)
+        val curl = idmatch?.let { "https://ok.ru/video/${it.groupValues[1]}" } ?: url.split("?").first()
+        val doc = app.get(url).document
+        val album = url.contains("/video/c")
+
+        val title = (if (album) doc.selectFirst("h3.album-info_name")?.text() ?: doc.selectFirst("meta[property=og:title]")?.attr("content") else doc.selectFirst("meta[property=og:title]")?.attr("content")) ?: doc.selectFirst("title")?.text() ?: return null
+        val author = doc.selectFirst("meta[property=ya:ovs:login]")?.attr("content")
+
+        val recs = doc.select("li.reco-content_item__7rrgi").mapNotNull { el ->
+            val rraw = el.selectFirst("a.link__91azp")?.attr("href")?.let { fixUrl(it) }
+            val rid = if (rraw != null) Regex("""video/(\d+)""").find(rraw)?.groupValues?.get(1) else null
+            val rurl = if (rid != null) "https://ok.ru/video/$rid" else rraw
+            val rtitle = el.selectFirst("div.card-title__el6vj")?.text() ?: el.selectFirst("img")?.attr("alt")
+            if (rurl != null && rtitle != null) newMovieSearchResponse(rtitle, rurl, TvType.Movie) { this.posterUrl = el.selectFirst("img")?.attr("src") } else null
+        }.distinctBy { it.url }
+
+        if (album) {
+            val aid = url.substringAfter("/video/c").substringBefore("?").split("/").firstOrNull()
+            val eps = mutableListOf<Episode>()
+            var page = 1
+            var hasnext = true
+            var lelem = doc.selectFirst(".loader-container")?.attr("data-last-element")
+
+            val felems = doc.select("div.ugrid_i.js-seen-item-movie")
+            val poster = felems.firstOrNull()?.selectFirst("img.video-card_img")?.attr("src")
+
+            felems.forEach { el ->
+                el.selectFirst("div.video-card")?.attr("data-id")?.let { id ->
+                    eps.add(newEpisode("https://ok.ru/video/$id") {
+                        this.name = el.selectFirst("a.video-card_n")?.text()
+                        this.posterUrl = el.selectFirst("img.video-card_img")?.attr("src")
+                        this.description = el.selectFirst("div.video-card_duration")?.text()
+                    })
+                }
+            }
+
+            while (hasnext && !aid.isNullOrEmpty() && !lelem.isNullOrEmpty()) {
+                page++
+                val pres = app.post("https://ok.ru/video/c$aid?st.cmd=anonymVideo&st.m=ALBUM&st.ft=album&st.aid=c$aid&cmd=VideoAlbumBlock", data = mapOf("fetch" to "false", "st.page" to page.toString(), "st.lastelem" to lelem!!), headers = mapOf("Referer" to url, "X-Requested-With" to "XMLHttpRequest"))
+                val pdoc = pres.document
+                val items = pdoc.select("div.ugrid_i.js-seen-item-movie")
+
+                if (items.isEmpty()) hasnext = false else {
+                    items.forEach { el ->
+                        el.selectFirst("div.video-card")?.attr("data-id")?.let { id ->
+                            eps.add(newEpisode("https://ok.ru/video/$id") {
+                                this.name = el.selectFirst("a.video-card_n")?.text()
+                                this.posterUrl = el.selectFirst("img.video-card_img")?.attr("src")
+                            })
+                        }
+                    }
+                    lelem = pres.headers["lastelem"] ?: pdoc.selectFirst(".loader-container")?.attr("data-last-element")
+                    if (pres.headers["fetchedall"] == "true") hasnext = false
+                }
+                if (page > 15) hasnext = false
+            }
+
+            val feps = eps.distinctBy { it.data }.reversed()
+            if (feps.isEmpty()) return null
+
+            return if (feps.size == 1) newMovieLoadResponse(title, curl, TvType.Movie, feps.first().data) { this.posterUrl = fixUrlNull(poster); this.recommendations = recs; author?.let { this.tags = listOf(it) } }
+            else newTvSeriesLoadResponse(title, curl, TvType.TvSeries, feps) { this.posterUrl = fixUrlNull(poster); this.recommendations = recs; this.showStatus = ShowStatus.Completed; author?.let { this.tags = listOf(it) } }
+        } else {
+            val poster = doc.selectFirst("meta[property=og:image]")?.attr("content")
+            val eurl = doc.selectFirst("meta[property=og:video:secure_url]")?.attr("content") ?: doc.selectFirst("meta[property=og:video:url]")?.attr("content") ?: curl.replace("/video/", "/videoembed/")
+            return newMovieLoadResponse(title, curl, TvType.Movie, eurl) { this.posterUrl = fixUrlNull(poster); this.duration = doc.selectFirst("meta[property=video:duration]")?.attr("content")?.toIntOrNull()?.div(60); this.recommendations = recs; author?.let { this.tags = listOf(it) } }
+        }
+    }
+
+    override suspend fun loadLinks(data: String, isCasting: Boolean, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit): Boolean {
+        loadExtractor(data, mainUrl, subtitleCallback, callback)
+        return true
+    }
+
+data class SearchItem(val name: String? = null, val imageUrl: String? = null, val movie: SearchMovie? = null)
+data class SearchMovie(val id: String? = null, val title: String? = null, val thumbnail: SearchThumbnail? = null)
+data class SearchThumbnail(val small: String? = null, val big: String? = null)
+data class ApiSearchResponse(val result: SearchData? = null)
+data class SearchData(val videos: SearchVideos? = null)
+data class SearchVideos(val list: List<SearchItem>? = null, val hasMore: Boolean? = null)
+}

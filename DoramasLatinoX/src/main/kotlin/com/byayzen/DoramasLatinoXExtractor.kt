@@ -1,0 +1,95 @@
+package com.byayzen
+
+import android.util.Log
+import com.seoulentertainment.app.SubtitleFile
+import com.seoulentertainment.app.app
+import com.seoulentertainment.app.extractors.Dailymotion
+import com.seoulentertainment.app.utils.AppUtils
+import com.seoulentertainment.app.utils.ExtractorApi
+import com.seoulentertainment.app.utils.ExtractorLink
+import com.seoulentertainment.app.utils.ExtractorLinkType
+import com.seoulentertainment.app.utils.M3u8Helper
+import com.seoulentertainment.app.utils.Qualities
+import com.seoulentertainment.app.utils.newExtractorLink
+import java.net.URI
+import java.security.MessageDigest
+import javax.crypto.Cipher
+import javax.crypto.spec.IvParameterSpec
+import javax.crypto.spec.SecretKeySpec
+
+class DoramasLatinoXExtractor : ExtractorApi() {
+    override val name = "DoramasLatinoX"
+    override val mainUrl = "https://doramasfoxito.p2pplay.online"
+    override val requiresReferer = true
+
+    private val TAG = "DoramasExtractor"
+
+    override suspend fun getUrl(
+        url: String,
+        referer: String?,
+        subtitleCallback: (SubtitleFile) -> Unit,
+        callback: (ExtractorLink) -> Unit
+    ) {
+        val headers =
+            mapOf("User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:134.0) Gecko/20100101 Firefox/134.0")
+        val hash = url.substringAfterLast("#").substringAfter("/")
+        val baseurl = getBaseUrl(url)
+
+        val encoded = app.get("$baseurl/api/v1/video?id=$hash", headers = headers).text.trim()
+
+        val key = "kiemtienmua911ca"
+        val ivList = listOf("1234567890oiuytr", "0123456789abcdef")
+
+        val decryptedText = ivList.firstNotNullOfOrNull { iv ->
+            try {
+                AesHelper.decryptAES(encoded, key, iv)
+            } catch (e: Exception) {
+                null
+            }
+        } ?: throw Exception("Failed to decrypt with all IVs")
+
+        val m3u8 = Regex("\"source\":\"(.*?)\"").find(decryptedText)
+            ?.groupValues?.get(1)
+            ?.replace("\\/", "/") ?: ""
+
+        callback.invoke(
+                    newExtractorLink(
+                        this.name,
+                        this.name,
+                        m3u8,
+                        type = ExtractorLinkType.M3U8
+                    ) {
+                        this.referer = url
+                        this.quality = quality
+                    }
+                )
+            }
+
+    private fun getBaseUrl(url: String): String {
+        return try {
+            URI(url).let { "${it.scheme}://${it.host}" }
+        } catch (e: Exception) {
+            com.lagradost.api.Log.e("Vidstack", "getBaseUrl fallback: ${e.message}")
+            mainUrl
+        }
+    }
+}
+
+object AesHelper {
+    private const val TRANSFORMATION = "AES/CBC/PKCS5PADDING"
+
+    fun decryptAES(inputHex: String, key: String, iv: String): String {
+        val cipher = Cipher.getInstance(TRANSFORMATION)
+        val secretKey = SecretKeySpec(key.toByteArray(Charsets.UTF_8), "AES")
+        val ivSpec = IvParameterSpec(iv.toByteArray(Charsets.UTF_8))
+
+        cipher.init(Cipher.DECRYPT_MODE, secretKey, ivSpec)
+        val decryptedBytes = cipher.doFinal(inputHex.hexToByteArray())
+        return String(decryptedBytes, Charsets.UTF_8)
+    }
+
+    private fun String.hexToByteArray(): ByteArray {
+        check(length % 2 == 0) { "Hex string must have an even length" }
+        return chunked(2).map { it.toInt(16).toByte() }.toByteArray()
+    }
+}

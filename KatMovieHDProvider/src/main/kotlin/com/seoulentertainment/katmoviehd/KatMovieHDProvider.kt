@@ -1,7 +1,7 @@
 package com.seoulentertainment.katmoviehd
 
-import com.lagradost.cloudstream3.*
-import com.lagradost.cloudstream3.utils.*
+import com.seoulentertainment.app.*
+import com.seoulentertainment.app.utils.*
 import org.jsoup.nodes.Element
 import android.util.Log
 import com.lagradost.nicehttp.NiceResponse
@@ -11,8 +11,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.async
 import org.json.JSONObject
 import org.json.JSONArray
-import com.lagradost.cloudstream3.network.WebViewResolver
-
+import com.seoulentertainment.app.network.WebViewResolver
 
 class KatMovieHDProvider : MainAPI() {
     companion object {
@@ -23,8 +22,7 @@ class KatMovieHDProvider : MainAPI() {
             "https://new.katmoviehd.top",
             "https://katmoviehd.to",
             "https://katmoviehd.sx",
-            "https://katmoviehd.nl",
-            "https://new.katdrama.my",
+            "https://katmoviehd.nl"
         )
 
         private suspend fun resolveUrl(force: Boolean = false): String {
@@ -271,9 +269,11 @@ class KatMovieHDProvider : MainAPI() {
                                 contentElements.forEach { el ->
                                     val text = el.text().trim()
                                     if (el.tagName() in listOf("h1", "h2", "h3", "h4", "h5", "h6", "p", "span", "strong") && text.length < 60) {
-                                        val epNum = getEpisodeNumber(text)
-                                        if (epNum != null) {
-                                            currentEpisodeNum = epNum
+                                        if (text.contains("Ep", ignoreCase = true) || text.contains("Episode", ignoreCase = true)) {
+                                            val epNum = getEpisodeNumber(text)
+                                            if (epNum != null) {
+                                                currentEpisodeNum = epNum
+                                            }
                                         }
                                     }
                                     
@@ -283,49 +283,28 @@ class KatMovieHDProvider : MainAPI() {
                                         val isValidProvider = href.contains("/locked?redirect=") || 
                                                               href.contains("/file/") || 
                                                               href.contains("/drive/") ||
-                                                              href.contains("hubcloud", ignoreCase = true) ||
-                                                              href.contains("gdflix", ignoreCase = true) ||
-                                                              href.contains("send.cm", ignoreCase = true) ||
-                                                              href.contains("send.now", ignoreCase = true) ||
-                                                              href.contains("sendcm", ignoreCase = true)
+                                                              href.contains("hubcloud") ||
+                                                              href.contains("gdflix") ||
+                                                              href.contains("send.cm") ||
+                                                              href.contains("send.now")
                                                               
                                         if (isValidProvider && !href.startsWith("#")) {
                                             val epName = "Episode $currentEpisodeNum"
-                                            val absoluteHref = if (href.startsWith("/")) {
-                                                val uri = URI(packUrl)
-                                                "${uri.scheme}://${uri.host}$href"
-                                            } else {
-                                                href
-                                            }
-                                            episodeUrls.add(epName to absoluteHref)
+                                            episodeUrls.add(epName to href)
                                         }
                                     }
                                 }
                                 
                                 // Fallback: if the in-order DOM parsing returned nothing, run the legacy parser
-                                 if (episodeUrls.isEmpty()) {
-                                     packDoc.select("a[href]").forEach { a ->
-                                         val href = a.attr("href") ?: return@forEach
-                                         val name = a.text().trim()
-                                         val isValidProvider = href.contains("/locked?redirect=") || 
-                                                               href.contains("/file/") || 
-                                                               href.contains("/drive/") ||
-                                                               href.contains("hubcloud", ignoreCase = true) ||
-                                                               href.contains("gdflix", ignoreCase = true) ||
-                                                               href.contains("send.cm", ignoreCase = true) ||
-                                                               href.contains("send.now", ignoreCase = true) ||
-                                                               href.contains("sendcm", ignoreCase = true)
-                                         if (isValidProvider) {
-                                             val absoluteHref = if (href.startsWith("/")) {
-                                                 val uri = URI(packUrl)
-                                                 "${uri.scheme}://${uri.host}$href"
-                                             } else {
-                                                 href
-                                             }
-                                             episodeUrls.add(name to absoluteHref)
-                                         }
-                                     }
-                                 }
+                                if (episodeUrls.isEmpty()) {
+                                    packDoc.select("a[href]").forEach { a ->
+                                        val href = a.attr("href") ?: return@forEach
+                                        val name = a.text().trim()
+                                        if (href.contains("/locked?redirect=") || href.contains("/file/") || href.contains("/drive/")) {
+                                            episodeUrls.add(name to href)
+                                        }
+                                    }
+                                }
                                 
                                 quality to episodeUrls
                             } catch (e: Exception) {
@@ -447,24 +426,11 @@ class KatMovieHDProvider : MainAPI() {
                     val quality = obj.optString("quality", "1080P")
                     
                     if (url.contains("/pack/")) {
-                        val (_, packDoc, _) = getDocumentWithWebViewFallback(url)
-                        if (packDoc != null) {
-                            if (url.contains("links.kmhd")) {
-                                packDoc.select("a[href]").forEach { a ->
-                                    val href = a.attr("href") ?: return@forEach
-                                    if (href.contains("/locked?redirect=") || href.contains("/file/")) {
-                                        val absoluteHref = if (href.startsWith("/")) {
-                                            val uri = URI(url)
-                                            "${uri.scheme}://${uri.host}$href"
-                                        } else {
-                                            href
-                                        }
-                                        urlsToResolve.add(absoluteHref to quality)
-                                    }
-                                }
-                            } else if (url.contains("gdflix", ignoreCase = true)) {
-                                packDoc.select("a[href*=\"/file/\"]").forEach { a ->
-                                    val href = a.attr("href") ?: return@forEach
+                        val packDoc = app.get(url).document
+                        if (url.contains("links.kmhd")) {
+                            packDoc.select("a[href]").forEach { a ->
+                                val href = a.attr("href") ?: return@forEach
+                                if (href.contains("/locked?redirect=") || href.contains("/file/")) {
                                     val absoluteHref = if (href.startsWith("/")) {
                                         val uri = URI(url)
                                         "${uri.scheme}://${uri.host}$href"
@@ -474,35 +440,44 @@ class KatMovieHDProvider : MainAPI() {
                                     urlsToResolve.add(absoluteHref to quality)
                                 }
                             }
+                        } else if (url.contains("gdflix", ignoreCase = true)) {
+                            packDoc.select("a[href*=\"/file/\"]").forEach { a ->
+                                val href = a.attr("href") ?: return@forEach
+                                val absoluteHref = if (href.startsWith("/")) {
+                                    val uri = URI(url)
+                                    "${uri.scheme}://${uri.host}$href"
+                                } else {
+                                    href
+                                }
+                                urlsToResolve.add(absoluteHref to quality)
+                            }
                         }
                     } else if (url.contains("links.dramashindi.online/archives/")) {
-                        val (_, packDoc, _) = getDocumentWithWebViewFallback(url)
-                        if (packDoc != null) {
-                            val contentElements = packDoc.select("div.single-main-content a[href], div.entry-content a[href]")
-                            contentElements.forEach { el ->
-                                val href = el.attr("href") ?: return@forEach
-                                val isValidProvider = href.contains("/locked?redirect=") || 
-                                                       href.contains("/file/") || 
-                                                       href.contains("/drive/") ||
-                                                       href.contains("hubcloud", ignoreCase = true) ||
-                                                       href.contains("gdflix", ignoreCase = true) ||
-                                                       href.contains("send.cm", ignoreCase = true) ||
-                                                       href.contains("send.now", ignoreCase = true) ||
-                                                       href.contains("sendcm", ignoreCase = true)
-                                                       
-                                if (isValidProvider && !href.startsWith("#")) {
-                                    val absoluteHref = if (href.startsWith("/")) {
-                                        val uri = URI(url)
-                                        "${uri.scheme}://${uri.host}$href"
-                                    } else {
-                                        href
-                                    }
-                                    urlsToResolve.add(absoluteHref to quality)
+                        val packDoc = app.get(url).document
+                        val contentElements = packDoc.select("div.single-main-content a[href], div.entry-content a[href]")
+                        contentElements.forEach { el ->
+                            val href = el.attr("href") ?: return@forEach
+                            val isValidProvider = href.contains("/locked?redirect=") || 
+                                                   href.contains("/file/") || 
+                                                   href.contains("/drive/") ||
+                                                   href.contains("hubcloud") ||
+                                                   href.contains("gdflix") ||
+                                                   href.contains("send.cm") ||
+                                                   href.contains("send.now")
+                                                   
+                            if (isValidProvider && !href.startsWith("#")) {
+                                val absoluteHref = if (href.startsWith("/")) {
+                                    val uri = URI(url)
+                                    "${uri.scheme}://${uri.host}$href"
+                                } else {
+                                    href
                                 }
+                                urlsToResolve.add(absoluteHref to quality)
                             }
                         }
                     } else {
                         val absoluteUrl = if (url.startsWith("/")) {
+                            // If the initial URL itself is relative (fallback)
                             val mainUri = URI(mainUrl)
                             "${mainUri.scheme}://${mainUri.host}$url"
                         } else {
@@ -526,27 +501,11 @@ class KatMovieHDProvider : MainAPI() {
             return false
         }
         
-        val qualityPriority = mapOf("2160P" to 4, "4K" to 4, "1080P" to 3, "720P" to 2, "480P" to 1)
-        val sortedUrls = urlsToResolve.sortedByDescending { (_, quality) ->
-            qualityPriority[quality.uppercase()] ?: 0
-        }
-        val uniqueUrls = sortedUrls.distinctBy { it.first }
-        
-        val seenStreamUrls = java.util.Collections.synchronizedSet(mutableSetOf<String>())
-        val deduplicatedCallback: (ExtractorLink) -> Unit = { link ->
-            val cleanUrl = link.url.trim().lowercase()
-            if (seenStreamUrls.add(cleanUrl)) {
-                callback(link)
-            } else {
-                Log.i("KatMovieHD", "Deduplicated duplicate stream link: ${link.url}")
-            }
-        }
-        
         coroutineScope {
-            uniqueUrls.map { (url, quality) ->
+            urlsToResolve.map { (url, quality) ->
                 async {
                     try {
-                        resolveEpisodeFile(url, quality, subtitleCallback, deduplicatedCallback)
+                        resolveEpisodeFile(url, quality, subtitleCallback, callback)
                     } catch (e: Exception) {
                         Log.e("KatMovieHD", "Error resolving file $url: ${e.message}")
                     }
@@ -578,59 +537,41 @@ class KatMovieHDProvider : MainAPI() {
         
         Log.i("KatMovieHD", "Resolved unlocked page URL: $fileUrl")
         
-        val isShortlinkPage = (fileUrl.contains("links.kmhd", ignoreCase = true) || 
-                               fileUrl.contains("dramashindi", ignoreCase = true) ||
-                               fileUrl.contains("kmhd", ignoreCase = true) || 
-                               fileUrl.contains("desilinks", ignoreCase = true) ||
-                               fileUrl.contains("/file/", ignoreCase = true)) && 
+        val isShortlinkPage = fileUrl.contains("links.kmhd.eu/file/") || 
+                              (fileUrl.contains("/file/") && 
                                !fileUrl.contains("gdflix", ignoreCase = true) && 
                                !fileUrl.contains("hubcloud", ignoreCase = true) &&
-                               !fileUrl.contains("gofile.io", ignoreCase = true) &&
-                               !fileUrl.contains("send.cm", ignoreCase = true) &&
-                               !fileUrl.contains("send.now", ignoreCase = true) &&
-                               !fileUrl.contains("pixeldrain", ignoreCase = true)
+                               !fileUrl.contains("gofile.io", ignoreCase = true))
         
         if (isShortlinkPage) {
-            val (_, doc, _) = getDocumentWithWebViewFallback(fileUrl)
-            if (doc != null) {
-                // Scrape all provider buttons
-                doc.select("a[href]").forEach { a ->
+            val doc = app.get(fileUrl).document
+            // Scrape all provider buttons
+            doc.select("a[href]").forEach { a ->
                 val href = a.attr("href") ?: return@forEach
                 val text = a.text().lowercase()
                 
-                var resolvedHref = if (href.startsWith("/")) {
+                val absoluteHref = if (href.startsWith("/")) {
                     val uri = URI(fileUrl)
                     "${uri.scheme}://${uri.host}$href"
                 } else {
                     href
                 }
                 
-                if (resolvedHref.contains("/redirect/") || resolvedHref.contains("kmhd.eu/route")) {
-                    resolvedHref = resolveRedirectUrl(resolvedHref)
-                }
-                
                 when {
-                    resolvedHref.contains("gdflix", ignoreCase = true) || text.contains("gdflix") -> {
-                        resolveGDFlix(resolvedHref, quality, subtitleCallback, callback)
+                    absoluteHref.contains("gdflix", ignoreCase = true) || text.contains("gdflix") -> {
+                        resolveGDFlix(absoluteHref, quality, subtitleCallback, callback)
                     }
-                    resolvedHref.contains("hubcloud", ignoreCase = true) || text.contains("hubcloud") -> {
-                        resolveHubCloud(resolvedHref, quality, subtitleCallback, callback)
+                    absoluteHref.contains("hubcloud", ignoreCase = true) || text.contains("hubcloud") -> {
+                        resolveHubCloud(absoluteHref, quality, subtitleCallback, callback)
                     }
-                    resolvedHref.contains("send.cm", ignoreCase = true) || resolvedHref.contains("send.now", ignoreCase = true) || text.contains("send.cm") || text.contains("send.now") -> {
-                        resolveSendCm(resolvedHref, quality, callback)
-                    }
-                    resolvedHref.contains("gofile.io", ignoreCase = true) || text.contains("gofile") -> {
-                        resolveGoFile(resolvedHref, quality, callback)
-                    }
-                    resolvedHref.contains("pixeldrain", ignoreCase = true) || text.contains("pixeldrain") -> {
-                        resolvePixeldrain(resolvedHref, quality, callback)
+                    absoluteHref.contains("send.cm", ignoreCase = true) || absoluteHref.contains("send.now", ignoreCase = true) || text.contains("send.cm") || text.contains("send.now") -> {
+                        resolveSendCm(absoluteHref, quality, callback)
                     }
                     else -> {
-                        loadExtractor(resolvedHref, subtitleCallback, callback)
+                        loadExtractor(absoluteHref, subtitleCallback, callback)
                     }
                 }
             }
-        }
         } else {
             // Direct provider links parsed from pack pages
             val lowerUrl = fileUrl.lowercase()
@@ -643,12 +584,6 @@ class KatMovieHDProvider : MainAPI() {
                 }
                 lowerUrl.contains("send.cm") || lowerUrl.contains("send.now") -> {
                     resolveSendCm(fileUrl, quality, callback)
-                }
-                lowerUrl.contains("gofile.io") || lowerUrl.contains("gofile") -> {
-                    resolveGoFile(fileUrl, quality, callback)
-                }
-                lowerUrl.contains("pixeldrain") -> {
-                    resolvePixeldrain(fileUrl, quality, callback)
                 }
                 else -> {
                     loadExtractor(fileUrl, subtitleCallback, callback)
@@ -664,12 +599,12 @@ class KatMovieHDProvider : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ) {
         Log.i("KatMovieHD", "Resolving GDFlix URL: $url")
-        val (_, doc, _) = getDocumentWithWebViewFallback(url)
-        if (doc == null) {
-            Log.e("KatMovieHD", "Failed to fetch GDFlix page: returned null document")
+        val doc = try {
+            app.get(url).document
+        } catch (e: Exception) {
+            Log.e("KatMovieHD", "Failed to fetch GDFlix page: ${e.message}")
             return
         }
-        Log.i("KatMovieHD", "GDFlix page anchors: " + doc.select("a[href]").map { "[${it.text().trim()}] -> ${it.attr("href")}" }.toString())
         
         val buttons = doc.select("a.btn, a[href]")
         buttons.forEach { a ->
@@ -684,7 +619,7 @@ class KatMovieHDProvider : MainAPI() {
                 
                 // Cloud Download [R2]
                 text.contains("R2", ignoreCase = true) || text.contains("Cloud Download", ignoreCase = true) -> {
-                    callback(newKatExtractorLink("GDFlix [R2]", "GDFlix [R2]", href) {
+                    callback(newExtractorLink("GDFlix [R2]", "GDFlix [R2]", href) {
                         this.quality = getQualityFromName(quality)
                     })
                 }
@@ -714,7 +649,7 @@ class KatMovieHDProvider : MainAPI() {
                     } else {
                         href
                     }
-                    resolveGDFlixGoFile(absoluteGofileUrl, quality, subtitleCallback, callback)
+                    resolveGDFlixGoFile(absoluteGofileUrl, subtitleCallback, callback)
                 }
             }
         }
@@ -729,7 +664,7 @@ class KatMovieHDProvider : MainAPI() {
             }
             if (targetUrl.contains("url=")) {
                 val directUrl = java.net.URLDecoder.decode(targetUrl.substringAfter("url="), "UTF-8")
-                callback(newKatExtractorLink("GDFlix [Instant DL]", "GDFlix [Instant DL]", directUrl) {
+                callback(newExtractorLink("GDFlix [Instant DL]", "GDFlix [Instant DL]", directUrl) {
                     this.quality = getQualityFromName(quality)
                 })
             }
@@ -751,7 +686,7 @@ class KatMovieHDProvider : MainAPI() {
                 } else {
                     href
                 }
-                callback(newKatExtractorLink("GDFlix [Fast Cloud]", "GDFlix [Fast Cloud]", absoluteUrl) {
+                callback(newExtractorLink("GDFlix [Fast Cloud]", "GDFlix [Fast Cloud]", absoluteUrl) {
                     this.quality = getQualityFromName(quality)
                 })
             }
@@ -760,310 +695,43 @@ class KatMovieHDProvider : MainAPI() {
         }
     }
 
-    private suspend fun resolveGoFile(url: String, quality: String, callback: (ExtractorLink) -> Unit) {
-        Log.i("KatMovieHD", "Resolving GoFile URL via WebView: $url with quality $quality")
+    private suspend fun resolveGDFlixGoFile(url: String, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit) {
         try {
-            var capturedUrl: String? = null
-            var capturedHeaders: Map<String, String>? = null
+            val doc = app.get(url, allowRedirects = true).document
+            var gofileUrl = doc.select("a[href]").firstOrNull { 
+                it.attr("href").contains("gofile.io") 
+            }?.attr("href")
             
-            val q = quality.lowercase()
-            val script = """
-                (function() {
-                    var checkFiles = setInterval(function() {
-                        var targetQuality = "$q";
-                        var bestLink = null;
-                        var anchors = Array.from(document.querySelectorAll('a[href*="download"], a[href*="srv-"]'));
-                        
-                        for (var i = 0; i < anchors.length; i++) {
-                            var a = anchors[i];
-                            var text = a.textContent.toLowerCase() + " " + a.href.toLowerCase();
-                            var rowText = a.parentElement ? a.parentElement.textContent.toLowerCase() : "";
-                            if (text.indexOf(targetQuality) !== -1 || rowText.indexOf(targetQuality) !== -1) {
-                                bestLink = a;
-                                break;
-                            }
-                        }
-                        
-                        if (!bestLink && anchors.length > 0) {
-                            bestLink = anchors[0];
-                        }
-                        
-                        if (bestLink && !bestLink.dataset.clicked) {
-                            bestLink.dataset.clicked = 'true';
-                            bestLink.click();
-                            clearInterval(checkFiles);
-                        }
-                    }, 500);
-                })();
-            """.trimIndent()
-
-            val webview = WebViewResolver(
-                interceptUrl = Regex("this-is-a-dummy-regex-pattern-that-does-not-match"),
-                additionalUrls = listOf(
-                    Regex(".*srv-.*\\.gofile\\.io/download/.*"),
-                    Regex(".*\\.gofile\\.io/download/.*")
-                ),
-                userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-                useOkhttp = false,
-                script = script,
-                timeout = 20000L
-            )
+            if (gofileUrl.isNullOrBlank()) {
+                gofileUrl = doc.select("a[href]").firstOrNull {
+                    it.text().contains("gofile", ignoreCase = true) || it.attr("href").contains("gofile", ignoreCase = true)
+                }?.attr("href")
+            }
             
-            webview.resolveUsingWebView(
-                url = url,
-                requestCallBack = { request ->
-                    val requestUrl = request.url.toString()
-                    Log.i("KatMovieHD", "GoFile WebView captured request: $requestUrl")
-                    if (requestUrl.contains("gofile.io/download") || requestUrl.contains("srv-")) {
-                        capturedUrl = requestUrl
-                        capturedHeaders = request.headers.names().associateWith { request.header(it).orEmpty() }
-                        true // Destroy webview
-                    } else {
-                        false
+            if (!gofileUrl.isNullOrBlank()) {
+                var realGofileUrl = if (gofileUrl.startsWith("/")) {
+                    val uri = URI(url)
+                    "${uri.scheme}://${uri.host}$gofileUrl"
+                } else {
+                    gofileUrl
+                }
+                
+                if (!realGofileUrl.contains("gofile.io")) {
+                    try {
+                        val resp = app.get(realGofileUrl, allowRedirects = true)
+                        realGofileUrl = resp.url
+                    } catch (e: Exception) {
+                        Log.e("KatMovieHD", "Failed to follow GoFile redirect: ${e.message}")
                     }
                 }
-            )
-            
-            if (!capturedUrl.isNullOrBlank()) {
-                val fileName = capturedUrl!!.substringAfterLast("/").substringBefore("?").ifBlank { "GoFile Video" }
                 
-                // Extract WebView cookies for authentication
-                val cookieManager = android.webkit.CookieManager.getInstance()
-                val cookies = cookieManager.getCookie("https://gofile.io") ?: cookieManager.getCookie(url)
-                
-                callback(
-                    newKatExtractorLink(
-                        "Gofile", 
-                        "[GoFile] $fileName", 
-                        capturedUrl!!,
-                        ExtractorLinkType.VIDEO
-                    ) {
-                        this.referer = url
-                        val headersMap = mutableMapOf<String, String>()
-                        if (capturedHeaders != null) {
-                            headersMap.putAll(capturedHeaders!!)
-                        }
-                        if (!cookies.isNullOrBlank()) {
-                            headersMap["Cookie"] = cookies
-                        }
-                        this.headers = headersMap
-                        this.quality = getQualityFromName(fileName)
-                    }
-                )
-                Log.i("KatMovieHD", "Successfully resolved GoFile stream via WebView: $capturedUrl with cookies: $cookies")
-            } else {
-                Log.w("KatMovieHD", "GoFile: WebView didn't capture download link. Trying static extraction fallback.")
-                val extractor = Gofile()
-                extractor.getUrl(url, referer = url, subtitleCallback = {}, callback = { link ->
-                    runBlocking {
-                        callback(newKatExtractorLink(link.source, link.name, link.url, link.type) {
-                            this.quality = link.quality
-                            this.referer = link.referer
-                            this.headers = link.headers
-                        })
-                    }
-                })
-            }
-        } catch (e: Exception) {
-            Log.e("KatMovieHD", "Failed to resolve GoFile: ${e.message}")
-        }
-    }
-
-    private suspend fun resolveGDFlixGoFile(url: String, quality: String, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit) {
-        Log.i("KatMovieHD", "resolveGDFlixGoFile called for URL: $url")
-        try {
-            val (_, doc, _) = getDocumentWithWebViewFallback(url)
-            if (doc == null) {
-                Log.e("KatMovieHD", "resolveGDFlixGoFile page returned null document")
-                return
-            }
-            val anchors = doc.select("a[href]")
-            Log.i("KatMovieHD", "resolveGDFlixGoFile found ${anchors.size} anchors")
-            
-            anchors.forEach { a ->
-                var href = a.attr("href") ?: return@forEach
-                val text = a.text().lowercase()
-                
-                val isGofile = href.contains("gofile.io") || text.contains("gofile")
-                val isMegaup = href.contains("megaup.net") || text.contains("megaup")
-                val is1fichier = href.contains("1fichier.com") || text.contains("1fichier")
-                val isSendcm = href.contains("send.cm") || href.contains("sendcm") || href.contains("send.now")
-                val isPixeldrain = href.contains("pixeldrain") || text.contains("pixeldrain")
-                
-                if (isGofile || isMegaup || is1fichier || isSendcm || isPixeldrain) {
-                    var absoluteUrl = if (href.startsWith("/")) {
-                        val uri = URI(url)
-                        "${uri.scheme}://${uri.host}$href"
-                    } else {
-                        href
-                    }
-                    
-                    if (!absoluteUrl.contains("gofile.io") && !absoluteUrl.contains("megaup.net") && !absoluteUrl.contains("1fichier.com") && !absoluteUrl.contains("send.cm") && !absoluteUrl.contains("sendcm") && !absoluteUrl.contains("send.now") && !absoluteUrl.contains("pixeldrain")) {
-                        absoluteUrl = resolveRedirectUrl(absoluteUrl)
-                    }
-                    
-                    Log.i("KatMovieHD", "Loading extractor for mirror: $absoluteUrl")
-                    if (absoluteUrl.contains("gofile.io") || absoluteUrl.contains("gofile")) {
-                        resolveGoFile(absoluteUrl, quality, callback)
-                    } else if (absoluteUrl.contains("send.cm") || absoluteUrl.contains("sendcm") || absoluteUrl.contains("send.now")) {
-                        resolveSendCm(absoluteUrl, quality, callback)
-                    } else if (absoluteUrl.contains("pixeldrain")) {
-                        resolvePixeldrain(absoluteUrl, quality, callback)
-                    } else {
-                        loadExtractor(absoluteUrl, subtitleCallback, callback)
-                    }
+                if (realGofileUrl.contains("gofile.io")) {
+                    loadExtractor(realGofileUrl, subtitleCallback, callback)
                 }
             }
         } catch (e: Exception) {
             Log.e("KatMovieHD", "GDFlix: GoFile resolution failed: ${e.message}")
         }
-    }
-
-    private suspend fun resolvePixeldrain(url: String, quality: String, callback: (ExtractorLink) -> Unit) {
-        // Ignored due to 6GB bandwidth cap limit
-    }
-
-    private fun extractDirectLink(url: String): String? {
-        val lowerUrl = url.lowercase()
-        return when {
-            lowerUrl.contains("link=") -> {
-                val raw = url.substringAfter("link=")
-                val cleaned = if (raw.contains("&")) raw.substringBefore("&") else raw
-                try {
-                    java.net.URLDecoder.decode(cleaned, "UTF-8")
-                } catch (e: Exception) {
-                    cleaned
-                }
-            }
-            lowerUrl.contains("url=") -> {
-                val raw = url.substringAfter("url=")
-                val cleaned = if (raw.contains("&")) raw.substringBefore("&") else raw
-                try {
-                    java.net.URLDecoder.decode(cleaned, "UTF-8")
-                } catch (e: Exception) {
-                    cleaned
-                }
-            }
-            else -> null
-        }
-    }
-
-    private fun isDirectResponse(resp: NiceResponse): Boolean {
-        val contentType = resp.headers["Content-Type"]?.lowercase() ?: ""
-        val contentDisposition = resp.headers["Content-Disposition"]?.lowercase() ?: ""
-        val contentLength = resp.headers["Content-Length"]?.toLongOrNull() ?: 0L
-        return contentType.contains("video") || 
-               contentType.contains("octet-stream") || 
-               contentDisposition.contains("attachment") ||
-               contentLength > 5_000_000L ||
-               resp.url.contains(".mkv", ignoreCase = true) ||
-               resp.url.contains(".mp4", ignoreCase = true)
-    }
-
-    private suspend fun getDocumentWithWebViewFallback(url: String): Triple<String, org.jsoup.nodes.Document?, Boolean> {
-        try {
-            val resp = app.get(url)
-            if (isDirectResponse(resp)) {
-                return Triple(resp.url, null, true)
-            }
-            val doc = resp.document
-            val title = doc.title().lowercase()
-            if (resp.code == 403 || title.contains("just a moment") || title.contains("cloudflare")) {
-                Log.i("KatMovieHD", "Cloudflare detected on $url. Resolving via WebView...")
-                val html = getHtmlViaWebView(url)
-                if (html.isNotBlank()) {
-                    val parsedDoc = org.jsoup.Jsoup.parse(html)
-                    return Triple(url, parsedDoc, false)
-                }
-            }
-            return Triple(resp.url, doc, false)
-        } catch (e: Exception) {
-            val msg = e.message ?: ""
-            if (msg.contains("Content-Length", ignoreCase = true) || msg.contains("OOM", ignoreCase = true) || msg.contains("5000000", ignoreCase = true)) {
-                Log.i("KatMovieHD", "OOM safety check triggered for $url (direct link).")
-                return Triple(url, null, true)
-            }
-            Log.i("KatMovieHD", "Connection failed for $url: ${e.message}. Retrying via WebView...")
-            try {
-                val html = getHtmlViaWebView(url)
-                if (html.isNotBlank()) {
-                    val parsedDoc = org.jsoup.Jsoup.parse(html)
-                    return Triple(url, parsedDoc, false)
-                }
-                return Triple(url, null, false)
-            } catch (ex: Exception) {
-                val exMsg = ex.message ?: ""
-                if (exMsg.contains("Content-Length", ignoreCase = true) || exMsg.contains("OOM", ignoreCase = true) || exMsg.contains("5000000", ignoreCase = true)) {
-                    return Triple(url, null, true)
-                }
-                Log.e("KatMovieHD", "WebView fallback failed for $url: ${ex.message}")
-                return Triple(url, null, false)
-            }
-        }
-    }
-
-    private suspend fun getHtmlViaWebView(url: String): String {
-        var html = ""
-        try {
-            val webview = WebViewResolver(
-                interceptUrl = Regex(".*"),
-                useOkhttp = false,
-                script = "document.documentElement.outerHTML",
-                scriptCallback = { html = it }
-            )
-            webview.resolveUsingWebView(url)
-            var count = 0
-            while (html.isBlank() && count < 30) {
-                kotlinx.coroutines.delay(100)
-                count++
-            }
-        } catch (e: Exception) {
-            Log.e("KatMovieHD", "Failed to get HTML via WebView: ${e.message}")
-        }
-        
-        return if (html.isNotBlank()) {
-            val cleaned = html.trim()
-            if (cleaned.startsWith("\"") && cleaned.endsWith("\"")) {
-                cleaned.substring(1, cleaned.length - 1)
-                    .replace("\\\"", "\"")
-                    .replace("\\n", "\n")
-                    .replace("\\t", "\t")
-                    .replace("\\r", "")
-                    .replace("\\\\", "\\")
-            } else {
-                cleaned
-            }
-        } else {
-            ""
-        }
-    }
-
-    private suspend fun resolveRedirectUrl(url: String): String {
-        try {
-            val resp = app.get(url, allowRedirects = true)
-            if (resp.url.isNotBlank() && resp.url != url) {
-                return resp.url
-            }
-        } catch (e: Exception) {
-            Log.w("KatMovieHD", "Failed fast redirect resolve for $url: ${e.message}")
-        }
-        
-        try {
-            val webview = WebViewResolver(
-                interceptUrl = Regex("https?://(www\\.)?(gofile\\.io|send\\.cm|send\\.now|pixeldrain\\.(com|dev)|megaup\\.net|1fichier\\.com)/.*"),
-                userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-                useOkhttp = false,
-                script = "(function() { var checkTimer = setInterval(function() { var continueBtn = Array.from(document.querySelectorAll('a, button, input[type=submit]')).find(function(el) { var txt = el.textContent.trim().toLowerCase(); var val = el.value ? el.value.trim().toLowerCase() : ''; return txt.indexOf('continue') !== -1 || txt.indexOf('proceed') !== -1 || txt.indexOf('click') !== -1 || txt.indexOf('download') !== -1 || val.indexOf('continue') !== -1 || val.indexOf('proceed') !== -1; }); if (continueBtn) { continueBtn.click(); } var form = document.querySelector('form'); if (form && !form.dataset.submitted) { form.dataset.submitted = 'true'; form.submit(); } }, 1000); })();",
-                timeout = 15000L
-            )
-            val (req, _) = webview.resolveUsingWebView(url)
-            if (req != null) {
-                return req.url.toString()
-            }
-        } catch (e: Exception) {
-            Log.e("KatMovieHD", "Failed WebView redirect resolve for $url: ${e.message}")
-        }
-        return url
     }
 
     private suspend fun resolveHubCloud(
@@ -1074,12 +742,7 @@ class KatMovieHDProvider : MainAPI() {
     ) {
         Log.i("KatMovieHD", "Resolving HubCloud URL: $url")
         try {
-            val (_, doc, _) = getDocumentWithWebViewFallback(url)
-            if (doc == null) {
-                Log.e("KatMovieHD", "resolveHubCloud page returned null document")
-                return
-            }
-            Log.i("KatMovieHD", "HubCloud page anchors: " + doc.select("a[href]").map { "[${it.text().trim()}] -> ${it.attr("href")}" }.toString())
+            val doc = app.get(url).document
             
             fun parseHubCloudButtons(document: org.jsoup.nodes.Document): Map<String, String> {
                 val urls = mutableMapOf<String, String>()
@@ -1132,35 +795,35 @@ class KatMovieHDProvider : MainAPI() {
                         genUrl
                     }
                     
-                    Log.i("KatMovieHD", "Fetching genUrl via WebView: $absoluteGenUrl")
-                    val html = getHtmlViaWebView(absoluteGenUrl)
-                    if (html.isNotBlank()) {
-                        val genDoc = org.jsoup.Jsoup.parse(html)
-                        Log.i("KatMovieHD", "HubCloud gen page anchors from WebView: " + genDoc.select("a[href]").map { "[${it.text().trim()}] -> ${it.attr("href")}" }.toString())
-                        buttons = parseHubCloudButtons(genDoc)
-                        refererUrl = absoluteGenUrl
-                    } else {
-                        val (_, genDoc, _) = getDocumentWithWebViewFallback(absoluteGenUrl)
-                        if (genDoc != null) {
-                            buttons = parseHubCloudButtons(genDoc)
-                            refererUrl = absoluteGenUrl
-                        }
-                    }
+                    Log.i("KatMovieHD", "Fetching genUrl: $absoluteGenUrl")
+                    val genDoc = app.get(absoluteGenUrl, referer = url).document
+                    buttons = parseHubCloudButtons(genDoc)
+                    refererUrl = absoluteGenUrl
                 }
             }
             
             buttons.forEach { (serverName, serverUrl) ->
                 if (serverName == "Pixel") {
-                    val absoluteServerUrl = if (serverUrl.startsWith("/")) {
-                        val uri = URI(refererUrl)
-                        "${uri.scheme}://${uri.host}$serverUrl"
-                    } else {
-                        serverUrl
+                    var realPixeldrainUrl = serverUrl
+                    if (serverUrl.contains("hubcloud") || !serverUrl.contains("pixeldrain")) {
+                        try {
+                            val absoluteServerUrl = if (serverUrl.startsWith("/")) {
+                                val uri = URI(refererUrl)
+                                "${uri.scheme}://${uri.host}$serverUrl"
+                            } else {
+                                serverUrl
+                            }
+                            val resp = app.get(absoluteServerUrl, allowRedirects = true)
+                            realPixeldrainUrl = resp.url
+                        } catch (e: Exception) {
+                            Log.e("KatMovieHD", "Failed to follow Pixeldrain redirect: ${e.message}")
+                        }
                     }
-                    val realPixeldrainUrl = resolveRedirectUrl(absoluteServerUrl)
-                    
-                    if (!realPixeldrainUrl.isNullOrBlank() && realPixeldrainUrl.contains("pixeldrain")) {
-                        resolvePixeldrain(realPixeldrainUrl, quality, callback)
+                    if (!realPixeldrainUrl.isNullOrBlank() && (realPixeldrainUrl.contains("pixeldrain") || realPixeldrainUrl.contains("/u/"))) {
+                        val directPixeldrain = realPixeldrainUrl.replace("/u/", "/api/file/").replace("pixeldrain.com", "pixeldrain.dev")
+                        callback(newExtractorLink("Pixeldrain", "Pixeldrain [HubCloud]", directPixeldrain) {
+                            this.quality = getQualityFromName(quality)
+                        })
                     }
                 } else {
                     try {
@@ -1171,21 +834,24 @@ class KatMovieHDProvider : MainAPI() {
                             serverUrl
                         }
                         
-                        val (finalUrl, finalDoc, isDirectLink) = getDocumentWithWebViewFallback(absoluteServerUrl)
+                        val resp = app.get(absoluteServerUrl, referer = refererUrl, allowRedirects = true)
+                        val finalUrl = resp.url
                         
-                        val directUrl = extractDirectLink(finalUrl)
-                        if (directUrl != null) {
-                            callback(newKatExtractorLink(serverName, serverName, directUrl) {
-                                this.quality = getQualityFromName(quality)
-                            })
-                            return@forEach
-                        }
+                        val contentType = resp.headers["Content-Type"]?.lowercase() ?: ""
+                        val contentDisposition = resp.headers["Content-Disposition"]?.lowercase() ?: ""
+                        val contentLength = resp.headers["Content-Length"]?.toLongOrNull() ?: 0L
+                        
+                        val isDirectLink = contentType.contains("video") || 
+                                           contentType.contains("octet-stream") || 
+                                           contentDisposition.contains("attachment") ||
+                                           contentLength > 5_000_000L
                         
                         if (isDirectLink) {
-                            callback(newKatExtractorLink(serverName, serverName, finalUrl) {
+                            callback(newExtractorLink(serverName, serverName, finalUrl) {
                                 this.quality = getQualityFromName(quality)
                             })
-                        } else if (finalDoc != null) {
+                        } else {
+                            val finalDoc = resp.document
                             var playUrl = finalDoc.selectFirst("a:contains(Download Here)")?.attr("href")
                             if (playUrl.isNullOrBlank()) {
                                 finalDoc.select("a[href]").forEach { a ->
@@ -1203,8 +869,7 @@ class KatMovieHDProvider : MainAPI() {
                                 } else {
                                     playUrl!!
                                 }
-                                val finalDirect = extractDirectLink(absolutePlayUrl) ?: absolutePlayUrl
-                                callback(newKatExtractorLink(serverName, serverName, finalDirect) {
+                                callback(newExtractorLink(serverName, serverName, absolutePlayUrl) {
                                     this.quality = getQualityFromName(quality)
                                 })
                             }
@@ -1224,123 +889,37 @@ class KatMovieHDProvider : MainAPI() {
         quality: String,
         callback: (ExtractorLink) -> Unit
     ) {
-        Log.i("KatMovieHD", "Resolving Send.cm URL: $url")
-        var finalSendUrl = url
-        if (url.contains("/redirect/")) {
-            finalSendUrl = resolveRedirectUrl(url)
-        }
-
-        // Try direct POST extraction first with WebView fallback page retrieval
+        Log.i("KatMovieHD", "Resolving Send.cm URL via WebView: $url")
         try {
-            val (_, doc, _) = getDocumentWithWebViewFallback(finalSendUrl)
-            if (doc != null) {
-                val form = doc.selectFirst("form")
-                if (form != null) {
-                    val inputs = form.select("input[type=hidden], input[type=submit], input[type=text]")
-                    val postData = mutableMapOf<String, String>()
-                    inputs.forEach { input ->
-                        val name = input.attr("name")
-                        val value = input.attr("value")
-                        if (!name.isNullOrBlank()) {
-                            postData[name] = value
-                        }
-                    }
-                    
-                    if (!postData.containsKey("op")) {
-                        postData["op"] = "download2"
-                    }
-                    
-                    val actionUrl = form.attr("action").ifBlank { finalSendUrl }
-                    val absoluteAction = if (actionUrl.startsWith("/")) {
-                        val uri = URI(finalSendUrl)
-                        "${uri.scheme}://${uri.host}$actionUrl"
-                    } else {
-                        actionUrl
-                    }
-                    
-                    val resp = app.post(
-                        absoluteAction,
-                        data = postData,
-                        headers = mapOf(
-                            "Referer" to finalSendUrl,
-                            "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-                        ),
-                        allowRedirects = false
-                    )
-                    
-                    val redirectUrl = resp.headers["Location"]
-                    if (!redirectUrl.isNullOrBlank()) {
-                        callback(newKatExtractorLink("Send.cm", "Send.cm", redirectUrl) {
-                            this.quality = getQualityFromName(quality)
-                        })
-                        Log.i("KatMovieHD", "Successfully resolved Send.cm via POST: $redirectUrl")
-                        return
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            Log.w("KatMovieHD", "Send.cm: Direct POST extraction failed: ${e.message}. Falling back to WebView.")
-        }
-
-        // Fallback to interactive WebView Resolver
-        try {
-            var capturedUrl: String? = null
-            var capturedHeaders: Map<String, String>? = null
-            
-            // Use dummy interceptUrl to prevent immediate exit on page URL match
             val webview = WebViewResolver(
-                interceptUrl = Regex("this-is-a-dummy-regex-pattern-that-does-not-match"),
-                additionalUrls = listOf(
-                    Regex(".*\\.m3u8.*"),
-                    Regex(".*\\.mp4.*"),
-                    Regex(".*\\.mkv.*"),
-                    Regex(".*send\\.(now|cm)/d/.*")
-                ),
-                userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-                useOkhttp = false,
-                script = "(function() { var checkTimer = setInterval(function() { var continueBtn = Array.from(document.querySelectorAll('a, button, div, span')).find(function(el) { return el.textContent.trim().toUpperCase() === 'CONTINUE'; }); if (continueBtn && !continueBtn.dataset.clicked) { continueBtn.dataset.clicked = 'true'; continueBtn.click(); return; } var form = document.querySelector('form'); if (form && !form.dataset.submitted) { form.dataset.submitted = 'true'; form.submit(); return; } var btn = document.querySelector('a.btn-download, a[href*=\"download\"], button[type=\"submit\"], .vjs-big-play-button'); if (btn && !btn.dataset.clicked) { btn.dataset.clicked = 'true'; btn.click(); } }, 1000); })();",
-                timeout = 25000L
+                interceptUrl = Regex(".*send\\.(now|cm)/.*"),
+                additionalUrls = listOf(Regex(".*\\.m3u8.*"), Regex(".*\\.mp4.*")),
+                useOkhttp = false
             )
-            
-            webview.resolveUsingWebView(
-                url = finalSendUrl,
-                requestCallBack = { request ->
-                    val requestUrl = request.url.toString()
-                    Log.i("KatMovieHD", "WebView captured request: $requestUrl")
-                    if (requestUrl.contains(".m3u8") || requestUrl.contains(".mp4") || requestUrl.contains(".mkv")) {
-                        capturedUrl = requestUrl
-                        capturedHeaders = request.headers.names().associateWith { request.header(it).orEmpty() }
-                        true // Destroy webview
-                    } else if (requestUrl != finalSendUrl && requestUrl.contains("/d/") && (requestUrl.contains(".mp4") || requestUrl.contains(".mkv") || requestUrl.contains(".m3u8") || requestUrl.contains("download") || requestUrl.contains("stream"))) {
-                        capturedUrl = requestUrl
-                        capturedHeaders = request.headers.names().associateWith { request.header(it).orEmpty() }
-                        true // Destroy webview
-                    } else {
-                        false
-                    }
-                }
-            )
-            
-            if (!capturedUrl.isNullOrBlank()) {
+            val (_, collectedRequests) = webview.resolveUsingWebView(url)
+            val streamRequest = collectedRequests.firstOrNull { 
+                it.url.toString().contains(".m3u8") || it.url.toString().contains(".mp4") 
+            }
+            if (streamRequest != null) {
+                val streamUrl = streamRequest.url.toString()
+                val headers = streamRequest.headers.names().associateWith { streamRequest.header(it).orEmpty() }
                 callback(
-                    newKatExtractorLink(
+                    newExtractorLink(
                         "Send.cm", 
                         "Send.cm", 
-                        capturedUrl!!
+                        streamUrl
                     ) {
-                        this.referer = finalSendUrl
-                        if (capturedHeaders != null) {
-                            this.headers = capturedHeaders!!
-                        }
+                        this.referer = url
+                        this.headers = headers
                         this.quality = getQualityFromName(quality)
                     }
                 )
-                Log.i("KatMovieHD", "Successfully resolved Send.cm stream via WebView: $capturedUrl")
+                Log.i("KatMovieHD", "Successfully resolved Send.cm stream: $streamUrl")
             } else {
                 Log.w("KatMovieHD", "Send.cm: No stream link captured in WebView requests")
             }
         } catch (e: Exception) {
-            Log.e("KatMovieHD", "Send.cm WebView resolution failed: ${e.message}")
+            Log.e("KatMovieHD", "Send.cm resolution failed: ${e.message}")
         }
     }
 

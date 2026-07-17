@@ -6,6 +6,7 @@ import com.lagradost.cloudstream3.LoadResponse.Companion.addActors
 import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
 import com.lagradost.cloudstream3.utils.AppUtils.toJson
 import com.lagradost.cloudstream3.utils.AppUtils.tryParseJson
+import com.lagradost.nicehttp.*
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.Qualities
@@ -40,19 +41,122 @@ class HDrezkaProvider : MainAPI() {
         TvType.AsianDrama
     )
 
-    override val mainPage = mainPageOf(
-        "$mainUrl/films/?filter=watching" to "фильмы",
-        "$mainUrl/series/?filter=watching" to "сериалы",
-        "$mainUrl/cartoons/?filter=watching" to "мультфильмы",
-        "$mainUrl/animation/?filter=watching" to "аниме",
-    )
+    private var domainInitialized = false
+
+    private suspend fun initDomain() {
+        if (domainInitialized) return
+        domainInitialized = true
+
+        val prefs = context?.getSharedPreferences("hdrezka_preferences", android.content.Context.MODE_PRIVATE)
+        val cached = prefs?.getString("main_url", null)
+        if (!cached.isNullOrEmpty()) {
+            mainUrl = cached
+            return
+        }
+
+        // Try current mainUrl first with a fast ping/DOH
+        try {
+            val res = app.get(mainUrl, timeout = 3000)
+            if (res.code == 200) {
+                return
+            }
+        } catch (e: Exception) {
+            // Ignore and try fallback
+        }
+
+        // Try fetching domains.json
+        try {
+            val jsonStr = app.get("https://raw.githubusercontent.com/phisher98/TVVVV/refs/heads/main/domains.json", timeout = 5000).text
+            val domains = tryParseJson<Map<String, String>>(jsonStr)
+            val githubDomain = domains?.get("hdrezka") ?: domains?.get("rezka")
+            if (!githubDomain.isNullOrEmpty()) {
+                prefs?.edit()?.putString("main_url", githubDomain)?.apply()
+                mainUrl = githubDomain
+                return
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("HDrezka", "domain.json is not accessible: ${e.message}")
+        }
+
+        // Try mirrors fallback
+        val mirrors = listOf("https://hdrezka.me", "https://rezka.me", "https://rezka.ag")
+        for (mirror in mirrors) {
+            try {
+                val res = app.get(mirror, timeout = 3000)
+                if (res.code == 200) {
+                    prefs?.edit()?.putString("main_url", mirror)?.apply()
+                    mainUrl = mirror
+                    return
+                }
+            } catch (e: Exception) {
+                // Try next mirror
+            }
+        }
+    }
+
+    private suspend fun safeGet(url: String, referer: String? = null): NiceResponse {
+        initDomain()
+        return try {
+            app.get(url, referer = referer)
+        } catch (e: Exception) {
+            val prefs = context?.getSharedPreferences("hdrezka_preferences", android.content.Context.MODE_PRIVATE)
+            prefs?.edit()?.remove("main_url")?.apply()
+            domainInitialized = false
+            initDomain()
+            val updatedUrl = if (url.contains("rezka") || url.contains("hdrezka")) {
+                val oldDomain = Regex("https://[^/]+").find(url)?.value ?: ""
+                if (oldDomain.isNotEmpty()) url.replace(oldDomain, mainUrl) else url
+            } else {
+                url
+            }
+            app.get(updatedUrl, referer = referer)
+        }
+    }
+
+    private suspend fun safePost(url: String, data: Map<String, String>, referer: String? = null, headers: Map<String, String>? = null): NiceResponse {
+        initDomain()
+        return try {
+            app.post(url, data = data, referer = referer, headers = headers ?: emptyMap())
+        } catch (e: Exception) {
+            val prefs = context?.getSharedPreferences("hdrezka_preferences", android.content.Context.MODE_PRIVATE)
+            prefs?.edit()?.remove("main_url")?.apply()
+            domainInitialized = false
+            initDomain()
+            val updatedUrl = if (url.contains("rezka") || url.contains("hdrezka")) {
+                val oldDomain = Regex("https://[^/]+").find(url)?.value ?: ""
+                if (oldDomain.isNotEmpty()) url.replace(oldDomain, mainUrl) else url
+            } else {
+                url
+            }
+            app.post(updatedUrl, data = data, referer = referer, headers = headers ?: emptyMap())
+        }
+    }
+
+    override val mainPage: List<MainPageData>
+        get() = mainPageOf(
+            "$mainUrl/films/?filter=watching" to "фильмы",
+            "$mainUrl/series/?filter=watching" to "сериалы",
+            "$mainUrl/cartoons/?filter=watching" to "мультфильмы",
+            "$mainUrl/animation/?filter=watching" to "аниме",
+        )
 
     override suspend fun getMainPage(
         page: Int,
         request: MainPageRequest
     ): HomePageResponse {
+        initDomain()
         val url = request.data.split("?")
-        val home = app.get("${url.first()}page/$page/?${url.last()}").document.select(
+        val targetUrl = if (url.first().startsWith("https://") && !url.first().startsWith(mainUrl)) {
+            val oldDomain = Regex("https://[^/]+").find(url.first())?.value ?: ""
+            if (oldDomain.isNotEmpty()) {
+                url.first().replace(oldDomain, mainUrl)
+            } else {
+                url.first()
+            }
+        } else {
+            url.first()
+        }
+        val home = safeGet("$targetUrl/page/$page/?${url.last()}").document.select(
             "div.b-content__inline_items div.b-content__inline_item"
         ).map {
             it.toSearchResult()
@@ -97,9 +201,9 @@ class HDrezkaProvider : MainAPI() {
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
-        
+        initDomain()
         val link = "$mainUrl/search/?do=search&subaction=search&q=$query"
-        val document = app.get(link).document
+        val document = safeGet(link).document
 
         return document.select("div.b-content__inline_items div.b-content__inline_item").map {
             it.toSearchResult()
@@ -107,9 +211,19 @@ class HDrezkaProvider : MainAPI() {
     }
 
     override suspend fun load(url: String): LoadResponse {
-        
-        val document = app.get(url).document
-        android.util.Log.d("HDrezka", "Url: $url")
+        initDomain()
+        val targetUrl = if (url.startsWith("https://") && !url.startsWith(mainUrl)) {
+            val oldDomain = Regex("https://[^/]+").find(url)?.value ?: ""
+            if (oldDomain.isNotEmpty()) {
+                url.replace(oldDomain, mainUrl)
+            } else {
+                url
+            }
+        } else {
+            url
+        }
+        val document = safeGet(targetUrl).document
+        android.util.Log.d("HDrezka", "Url: $targetUrl")
         android.util.Log.d("HDrezka", "Doc length: ${document.toString().length}")
         android.util.Log.d("HDrezka", "Doc head: ${document.head().toString().take(300)}")
         android.util.Log.d("HDrezka", "Doc body: ${document.body()?.html()?.take(1000)}")
@@ -134,7 +248,7 @@ class HDrezkaProvider : MainAPI() {
         } else {
             description
         }
-        val trailer = app.post(
+        val trailer = safePost(
             "$mainUrl/engine/ajax/gettrailervideo.php",
             data = mapOf("id" to id),
             referer = url
@@ -413,8 +527,8 @@ class HDrezkaProvider : MainAPI() {
 
         tryParseJson<Data>(data)?.let { res ->
             if (res.server?.isEmpty() == true) {
-                val document = app.get(res.ref ?: return@let).document
-                document.select("script").map { script ->
+                val document = safeGet(res.ref ?: return@let).document
+                for (script in document.select("script")) {
                     if (script.data().contains("sof.tv.initCDNMoviesEvents(")) {
                         val dataJson =
                             script.data().substringAfter("false, {").substringBefore("});")
@@ -430,8 +544,8 @@ class HDrezkaProvider : MainAPI() {
                     }
                 }
             } else {
-                res.server?.take(4)?.map { server ->
-                    app.post(
+                for (server in (res.server?.take(4) ?: emptyList())) {
+                    safePost(
                         url = "$mainUrl/ajax/get_cdn_series/?t=${Date().time}",
                         data = mapOf(
                             "id" to res.id,

@@ -1,8 +1,13 @@
 rootProject.name = "CloudstreamPlugins"
 
-// Automatically include any subdirectory that contains a build.gradle.kts file
-rootDir.listFiles()?.forEach { dir ->
-    if (dir.isDirectory && File(dir, "build.gradle.kts").exists()) {
-        include(dir.name)
-    }
-}
+// Explicitly include only active and supported providers to keep the build clean and fast
+val activePlugins = listOf(
+    "CineStream",
+    "HDrezkaProvider",
+    "KatMovieHDProvider",
+    "MovieLinkBDProvider",
+    "MPlayerProvider"
+)
+
+activePlugins.forEach { include(it) }
+

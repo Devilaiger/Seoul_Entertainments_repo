@@ -3,23 +3,30 @@ import org.jetbrains.kotlin.konan.properties.Properties
 version = 470
 android {
     defaultConfig {
-        val properties = Properties()
-        properties.load(project.rootProject.file("local.properties").inputStream())
+        val properties = Properties().apply {
+            val localFile = project.rootProject.file("local.properties")
+            if (localFile.exists()) {
+                localFile.inputStream().use { load(it) }
+            }
+        }
+        fun getSecret(key: String): String {
+            return properties.getProperty(key) ?: System.getenv(key) ?: ""
+        }
         android.buildFeatures.buildConfig=true
-        buildConfigField("String", "SIMKL_API", "\"${properties.getProperty("SIMKL_API")}\"")
-        buildConfigField("String", "TMDB_KEY", "\"${properties.getProperty("TMDB_KEY")}\"")
-        buildConfigField("String", "CC_COOKIE", "\"${properties.getProperty("CC_COOKIE")}\"")
-        buildConfigField("String", "CASTLE_KEY", "\"${properties.getProperty("CASTLE_KEY")}\"")
-        buildConfigField("String", "MOVIEBLAST_TOKEN", "\"${properties.getProperty("MOVIEBLAST_TOKEN")}\"")
-        buildConfigField("String", "MOVIEBLAST_API", "\"${properties.getProperty("MOVIEBLAST_API")}\"")
-        buildConfigField("String", "MOVIEBLAST_KEY", "\"${properties.getProperty("MOVIEBLAST_KEY")}\"")
+        buildConfigField("String", "SIMKL_API", "\"${getSecret("SIMKL_API")}\"")
+        buildConfigField("String", "TMDB_KEY", "\"${getSecret("TMDB_KEY")}\"")
+        buildConfigField("String", "CC_COOKIE", "\"${getSecret("CC_COOKIE")}\"")
+        buildConfigField("String", "CASTLE_KEY", "\"${getSecret("CASTLE_KEY")}\"")
+        buildConfigField("String", "MOVIEBLAST_TOKEN", "\"${getSecret("MOVIEBLAST_TOKEN")}\"")
+        buildConfigField("String", "MOVIEBLAST_API", "\"${getSecret("MOVIEBLAST_API")}\"")
+        buildConfigField("String", "MOVIEBLAST_KEY", "\"${getSecret("MOVIEBLAST_KEY")}\"")
     }
 }
 
 cloudstream {
     language = "en"
     description = "One stop solution for Movies, Series, Anime, AsianDrama and Torrents"
-    authors = listOf("megix")
+    authors = listOf("seoulentertainments")
     status = 1
     tvTypes = listOf(
         "TvSeries",
@@ -29,5 +36,5 @@ cloudstream {
         "Torrent"
     )
 
-    iconUrl = "https://github.com/SaurabhKaperwan/CSX/raw/refs/heads/master/CineStream/icon.png"
+    iconUrl = "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/master/CineStream/icon.png"
 }

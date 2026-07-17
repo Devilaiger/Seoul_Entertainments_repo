@@ -1,10 +1,10 @@
 [
     {
         "iconUrl": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/master/CineStream/icon.png",
-        "fileHash": "sha256-0f7a941e490fb363b72125e5345d7094283b28dc487989a4eb7a272252516eb6",
+        "fileHash": "sha256-a2fa8f61017810b6485cea83cd571db473643b93da4c2ba06b7e938118ddfa50",
         "apiVersion": 1,
         "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
-        "fileSize": 701817,
+        "fileSize": 712710,
         "status": 1,
         "language": "en",
         "authors": [
@@ -26,10 +26,10 @@
     },
     {
         "iconUrl": "https://www.google.com/s2/favicons?domain=rezka.ag&sz=%size%",
-        "fileHash": "sha256-8921ac2a0e237bc12fcf93705078faf50a72f0b15423fdd0486449ac0a00fa09",
+        "fileHash": "sha256-79f0f9a8f0599a282957365f5a90efe00670d389b9faaa8b5af21f71c5aa36d1",
         "apiVersion": 1,
         "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
-        "fileSize": 39303,
+        "fileSize": 39610,
         "status": 1,
         "language": "ru",
         "authors": [

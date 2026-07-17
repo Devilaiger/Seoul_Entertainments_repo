@@ -26,7 +26,7 @@ android {
 cloudstream {
     language = "en"
     description = "One stop solution for Movies, Series, Anime, AsianDrama and Torrents"
-    authors = listOf("seoulentertainments")
+    authors = listOf("megix", "seoulentertainments")
     status = 1
     tvTypes = listOf(
         "TvSeries",

@@ -2,6 +2,7 @@ import org.jetbrains.kotlin.konan.properties.Properties
 
 version = 470
 android {
+    namespace = "com.megix"
     defaultConfig {
         val properties = Properties().apply {
             val localFile = project.rootProject.file("local.properties")

@@ -1,7 +1,7 @@
 [
     {
         "iconUrl": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/master/CineStream/icon.png",
-        "fileHash": "sha256-6520891de2acc3f96ce6909fb77694999114175368a820088029a71186be9b2f",
+        "fileHash": "sha256-0f7a941e490fb363b72125e5345d7094283b28dc487989a4eb7a272252516eb6",
         "apiVersion": 1,
         "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
         "fileSize": 701817,
@@ -18,7 +18,7 @@
             "Anime",
             "Torrent"
         ],
-        "version": 470,
+        "version": 471,
         "internalName": "CineStream",
         "description": "One stop solution for Movies, Series, Anime, AsianDrama and Torrents",
         "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/CineStream.cs3",
@@ -26,7 +26,7 @@
     },
     {
         "iconUrl": "https://www.google.com/s2/favicons?domain=rezka.ag&sz=%size%",
-        "fileHash": "sha256-1275602283d8da49b2ef24470348bae3ad1ead9851ca282de811d68d5d6337c8",
+        "fileHash": "sha256-8921ac2a0e237bc12fcf93705078faf50a72f0b15423fdd0486449ac0a00fa09",
         "apiVersion": 1,
         "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
         "fileSize": 39303,
@@ -41,17 +41,17 @@
             "TvSeries",
             "Movie"
         ],
-        "version": 24,
+        "version": 25,
         "internalName": "HDrezkaProvider",
         "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/HDrezkaProvider.cs3",
         "name": "HDrezkaProvider"
     },
     {
         "iconUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo/raw/refs/heads/master/KatMovieHDProvider/icon.png",
-        "fileHash": "sha256-c2dad1060879f081cdedf2e744d2d7aa0d23d4e1c50b8f19c5b473db337ecf2b",
+        "fileHash": "sha256-a6bc417b8a326a4bdfa5b8251d73b555e78bada8383a460a44137d694cbcf067",
         "apiVersion": 1,
         "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
-        "fileSize": 82304,
+        "fileSize": 57328,
         "status": 1,
         "language": "en",
         "authors": [
@@ -89,7 +89,7 @@
     },
     {
         "iconUrl": "https://www.google.com/s2/favicons?domain=www.mxplayer.in&sz=%size%",
-        "jarFileSize": 509429,
+        "jarFileSize": 509425,
         "fileHash": "sha256-32d0a412abd720aa44922494433750b3c18a8951dce81bfb46d7cc7640206b32",
         "apiVersion": 1,
         "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
@@ -110,6 +110,6 @@
         "description": "Indian Movies/Series/Kdrama(Hindi Dubbed)",
         "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/MPlayerProvider.cs3",
         "name": "MPlayerProvider",
-        "jarHash": "sha256-6a88ea6369b1b2c5c50a6bb39ab764ba5cfe9de45f210489cb75c5cf4812afa2"
+        "jarHash": "sha256-7f72a7adbadf5cb1272917ebbabf2f0ee62ef221a3fa41c7880fef39f70f8e68"
     }
 ]

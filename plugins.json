@@ -1,10 +1,10 @@
 [
     {
         "iconUrl": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/master/CineStream/icon.png",
-        "fileHash": "sha256-a2fa8f61017810b6485cea83cd571db473643b93da4c2ba06b7e938118ddfa50",
+        "fileHash": "sha256-608488726e38f27b70f150fb670f4a8c3a27daa81394814da5f4ef27e1843ceb",
         "apiVersion": 1,
         "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
-        "fileSize": 712710,
+        "fileSize": 712724,
         "status": 1,
         "language": "en",
         "authors": [
@@ -18,7 +18,7 @@
             "Anime",
             "Torrent"
         ],
-        "version": 471,
+        "version": 472,
         "internalName": "CineStream",
         "description": "One stop solution for Movies, Series, Anime, AsianDrama and Torrents",
         "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/CineStream.cs3",
@@ -26,10 +26,10 @@
     },
     {
         "iconUrl": "https://www.google.com/s2/favicons?domain=rezka.ag&sz=%size%",
-        "fileHash": "sha256-79f0f9a8f0599a282957365f5a90efe00670d389b9faaa8b5af21f71c5aa36d1",
+        "fileHash": "sha256-754e969a914402c5f967ce15efe16bf24492ba2a7313cbcdd313bee5e51edb9a",
         "apiVersion": 1,
         "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
-        "fileSize": 39610,
+        "fileSize": 39593,
         "status": 1,
         "language": "ru",
         "authors": [
@@ -41,7 +41,7 @@
             "TvSeries",
             "Movie"
         ],
-        "version": 25,
+        "version": 26,
         "internalName": "HDrezkaProvider",
         "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/HDrezkaProvider.cs3",
         "name": "HDrezkaProvider"

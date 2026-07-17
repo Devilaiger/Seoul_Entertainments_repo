@@ -49,10 +49,17 @@ jobs:
       - name: Build Plugins
         run: |
           cd $GITHUB_WORKSPACE/src
+          echo 'rootProject.name = "CloudstreamPlugins"' > settings.gradle.kts
+          echo 'include("CineStream")' >> settings.gradle.kts
+          echo 'include("HDrezkaProvider")' >> settings.gradle.kts
+          echo 'include("KatMovieHDProvider")' >> settings.gradle.kts
+          echo 'include("MovieLinkBDProvider")' >> settings.gradle.kts
+          echo 'include("MPlayerProvider")' >> settings.gradle.kts
           chmod +x gradlew
           ./gradlew make makePluginsJson
           cp **/build/*.cs3 $GITHUB_WORKSPACE/builds
           cp build/plugins.json $GITHUB_WORKSPACE/builds
+
 
       - name: Push builds
         run: |

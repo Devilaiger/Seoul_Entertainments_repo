@@ -1,5 +1,5 @@
 // use an integer for version numbers
-version = 23
+version = 24
 
 android {
     buildFeatures {
@@ -12,7 +12,7 @@ cloudstream {
     // All of these properties are optional, you can safely remove them
 
     // description = "Lorem Ipsum"
-     authors = listOf("Hexated, NivinCNC")
+     authors = listOf("SeoulEntertainment")
 
     /**
      * Status int as the following:

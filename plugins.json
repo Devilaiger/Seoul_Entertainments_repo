@@ -1,5 +1,54 @@
 [
     {
+        "iconUrl": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/master/CineStream/icon.png",
+        "fileHash": "sha256-8f2050c5cdfa3f3a72f6541c527b79d4a86c388a73d6747e8cb8429e6d80421e",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
+        "fileSize": 722388,
+        "status": 1,
+        "language": "en",
+        "authors": [
+            "megix",
+            "seoulentertainments"
+        ],
+        "tvTypes": [
+            "TvSeries",
+            "Movie",
+            "AsianDrama",
+            "Anime",
+            "Torrent"
+        ],
+        "version": 470,
+        "internalName": "CineStream",
+        "description": "One stop solution for Movies, Series, Anime, AsianDrama and Torrents",
+        "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/CineStream.cs3",
+        "name": "CineStream"
+    },
+    {
+        "iconUrl": "https://www.google.com/s2/favicons?domain=rezka.ag&sz=%size%",
+        "fileHash": "sha256-9fc0c7bed9c897b65f25498e48c595cd6f328d42bb6075958b86b4434a1da17c",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
+        "fileSize": 36612,
+        "status": 1,
+        "language": "ru",
+        "authors": [
+            "Hexated",
+            "NivinCNC",
+            "seoulentertainments"
+        ],
+        "tvTypes": [
+            "AsianDrama",
+            "Anime",
+            "TvSeries",
+            "Movie"
+        ],
+        "version": 23,
+        "internalName": "HDrezkaProvider",
+        "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/HDrezkaProvider.cs3",
+        "name": "HDrezkaProvider"
+    },
+    {
         "iconUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo/raw/refs/heads/master/KatMovieHDProvider/icon.png",
         "fileHash": "sha256-c2dad1060879f081cdedf2e744d2d7aa0d23d4e1c50b8f19c5b473db337ecf2b",
         "apiVersion": 1,

@@ -47,11 +47,10 @@
         "name": "HDrezkaProvider"
     },
     {
-        "iconUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo/raw/refs/heads/master/KatMovieHDProvider/icon.png",
-        "fileHash": "sha256-a6bc417b8a326a4bdfa5b8251d73b555e78bada8383a460a44137d694cbcf067",
+        "fileHash": "sha256-e655674144c76b3e64bd196b3072216ff5003ed4dc993b01db7f7c10a9d11dac",
         "apiVersion": 1,
         "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
-        "fileSize": 57328,
+        "fileSize": 77855,
         "status": 1,
         "language": "en",
         "authors": [
@@ -61,7 +60,7 @@
             "Movie",
             "TvSeries"
         ],
-        "version": 2,
+        "version": 1,
         "internalName": "KatMovieHDProvider",
         "description": "KatMovieHD Provider (In-House)",
         "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/KatMovieHDProvider.cs3",

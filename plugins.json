@@ -47,6 +47,7 @@
         "name": "HDrezkaProvider"
     },
     {
+        "iconUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo/raw/refs/heads/master/KatMovieHDProvider/icon.png",
         "fileHash": "sha256-8b57dbe814ef96aff30d83d03eca3040b20cc6b377f027d665e684265b14be28",
         "apiVersion": 1,
         "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",

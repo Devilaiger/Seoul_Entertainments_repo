@@ -152,9 +152,14 @@ class KatMovieHDProvider : MainAPI() {
             ?: return null
         if (title.isBlank()) return null
         
-        var poster = selectFirst("img")?.attr("src")
-        if (poster.isNullOrBlank() || !poster.startsWith("http")) {
-            poster = selectFirst("img")?.attr("data-src")
+        val img = selectFirst("img.poster-img, img.wp-post-image, div.post-thumb img, img")
+        var poster = img?.attr("src").takeIf { !it.isNullOrBlank() && it.startsWith("http") }
+            ?: img?.attr("data-src").takeIf { !it.isNullOrBlank() && it.startsWith("http") }
+            ?: img?.attr("data-lazy-src").takeIf { !it.isNullOrBlank() && it.startsWith("http") }
+            ?: img?.attr("srcset")?.split(",")?.firstOrNull()?.trim()?.split(" ")?.firstOrNull()
+            
+        if (poster?.contains("image.tmdb.org") == true) {
+            poster = poster.replace("/w185/", "/w500/").replace("/w342/", "/w500/")
         }
         
         val tvType = if (isTvSeries(title)) {
@@ -190,12 +195,11 @@ class KatMovieHDProvider : MainAPI() {
             title = doc.selectFirst("h1.entry-title")?.text() ?: ""
         }
         
-        var poster = doc.selectFirst("meta[property=\"og:image\"]")?.attr("content")
-            ?: doc.selectFirst("div.entry-content img")?.let { img ->
-                img.attr("data-lazy-src").takeIf { !it.isNullOrBlank() }
-                    ?: img.attr("data-src").takeIf { !it.isNullOrBlank() }
-                    ?: img.attr("src")
-            }
+        var poster = doc.selectFirst("img.poster-img, div.single-main-content img, div.entry-content img, article img")?.let { img ->
+            img.attr("src").takeIf { !it.isNullOrBlank() && it.startsWith("http") }
+                ?: img.attr("data-src").takeIf { !it.isNullOrBlank() && it.startsWith("http") }
+                ?: img.attr("data-lazy-src").takeIf { !it.isNullOrBlank() && it.startsWith("http") }
+        } ?: doc.selectFirst("meta[property=\"og:image\"]")?.attr("content")
             
         poster = poster?.trim()?.let { p ->
             when {
@@ -203,6 +207,12 @@ class KatMovieHDProvider : MainAPI() {
                 p.startsWith("/") -> "${mainUrl.removeSuffix("/")}$p"
                 else -> p
             }
+        }
+        
+        val backdropPoster = if (poster?.contains("image.tmdb.org") == true) {
+            poster.replace("/w185/", "/w780/").replace("/w342/", "/w780/").replace("/w500/", "/w780/")
+        } else {
+            poster
         }
         
         val description = doc.selectFirst("div.single-main-content p, div.entry-content p")?.text()
@@ -398,7 +408,7 @@ class KatMovieHDProvider : MainAPI() {
             
             return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodes) {
                 this.posterUrl = poster
-                this.backgroundPosterUrl = poster
+                this.backgroundPosterUrl = backdropPoster
                 this.plot = description
                 this.tags = tags
             }
@@ -414,7 +424,7 @@ class KatMovieHDProvider : MainAPI() {
                 }
                 return newMovieLoadResponse(title, url, TvType.Movie, listOf(EpisodeLink(jsonArray.toString()))) {
                     this.posterUrl = poster
-                    this.backgroundPosterUrl = poster
+                    this.backgroundPosterUrl = backdropPoster
                     this.plot = description
                     this.tags = tags
                 }
@@ -433,7 +443,7 @@ class KatMovieHDProvider : MainAPI() {
             }
             return newMovieLoadResponse(title, url, TvType.Movie, links.map { EpisodeLink(it.url) }) {
                 this.posterUrl = poster
-                this.backgroundPosterUrl = poster
+                this.backgroundPosterUrl = backdropPoster
                 this.plot = description
                 this.tags = tags
             }
@@ -487,7 +497,7 @@ class KatMovieHDProvider : MainAPI() {
                                 }
                             }
                         }
-                    } else if (url.contains("links.dramashindi.online/archives/")) {
+                    } else if (url.contains("/archives/") || url.contains("/pack/") || (url.contains("links.") && !url.contains("/file/"))) {
                         val (_, packDoc, _) = getDocumentWithWebViewFallback(url)
                         if (packDoc != null) {
                             val contentElements = packDoc.select("div.single-main-content a[href], div.entry-content a[href]")

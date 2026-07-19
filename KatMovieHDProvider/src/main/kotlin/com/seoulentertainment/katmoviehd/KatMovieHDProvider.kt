@@ -127,18 +127,22 @@ class KatMovieHDProvider : MainAPI() {
         return newHomePageResponse(request.name, items)
     }
 
-    private fun isTvSeries(title: String): Boolean {
-        return title.contains("Season", true) || 
-               title.contains("S0", true) ||
-               title.contains("Complete", true) || 
-               title.contains("Episode", true) || 
-               title.contains("Series", true) ||
-               title.contains("Drama", true) ||
-               title.contains("Show", true) ||
-               title.contains("Kdrama", true) ||
-               title.contains("Jdrama", true) ||
-               Regex("""(?i)\bs\d+\b""").containsMatchIn(title) ||
-               Regex("""(?i)\bep\s*\d+\b""").containsMatchIn(title)
+    private fun cleanTitle(rawTitle: String): String {
+        var title = rawTitle.replaceFirst(Regex("(?i)^Download\\s+"), "").trim()
+        title = title.replace(Regex("""(?i)\s*\b(Season\s*\d+|S\d{1,2}|S\d{1,2}-S\d{1,2})\b.*"""), "")
+        title = title.replace(Regex("""(?i)[\(\[\{]?(480p|720p|1080p|2160p|4k|WEB-DL|HEVC|x264|x265|HDRip|Bluray|HQ|Hindi|Dual Audio|Multi Audio|ESub|HIN-ENG-KOR|HIN-KOR)[\)\]\}]?"""), "")
+        title = title.replace(Regex("""(?i)\b(Movie|Film)\b"""), "")
+        return title.replace(Regex("""\s+"""), " ").trim(' ', '-', ':', '[', ']', '(', ')')
+    }
+
+    private fun isTvSeries(doc: org.jsoup.nodes.Document?, title: String, url: String = ""): Boolean {
+        if (doc != null) {
+            val pageText = doc.select("div.single-main-content, div.entry-content, article").text()
+            if (pageText.contains("Series Name", ignoreCase = true)) return true
+            if (pageText.contains("Movie Name", ignoreCase = true)) return false
+        }
+        val seasonRegex = Regex("""(?i)\b(Season\s*\d+|S\d{1,2}|Season\b|Episodes?\b|\bEp\s*\d+|\bEp\.\d+|Complete\s+Series)\b""")
+        return seasonRegex.containsMatchIn(title) || seasonRegex.containsMatchIn(url)
     }
 
     private fun Element.toSearchResult(): SearchResponse? {
@@ -162,13 +166,13 @@ class KatMovieHDProvider : MainAPI() {
             poster = poster.replace("/w185/", "/w500/").replace("/w342/", "/w500/")
         }
         
-        val tvType = if (isTvSeries(title)) {
+        val tvType = if (isTvSeries(null, title, href)) {
             TvType.TvSeries
         } else {
             TvType.Movie
         }
         
-        return newMovieSearchResponse(title.replace("Download ", ""), href, tvType) {
+        return newMovieSearchResponse(cleanTitle(title), href, tvType) {
             this.posterUrl = poster
         }
     }
@@ -221,11 +225,13 @@ class KatMovieHDProvider : MainAPI() {
             
         val tags = doc.select("div.entry-categories a, div.entry-tags a, div.single-tags a, a[rel=\"category tag\"]").map { it.text() }
         
-        val type = if (isTvSeries(title)) {
+        val type = if (isTvSeries(doc, title, url)) {
             TvType.TvSeries
         } else {
             TvType.Movie
         }
+        
+        val displayTitle = cleanTitle(title)
 
         // Extract quality links in the "Single Episodes Link" or single links section
         val qualityLinks = mutableListOf<Pair<String, String>>()
@@ -276,7 +282,12 @@ class KatMovieHDProvider : MainAPI() {
                     qualityLinks.map { (quality, packUrl) ->
                         async {
                             try {
-                                val (_, packDoc, _) = getDocumentWithWebViewFallback(packUrl)
+                                var (_, packDoc, _) = getDocumentWithWebViewFallback(packUrl)
+                                if (packDoc == null) {
+                                    kotlinx.coroutines.delay(500L)
+                                    val retryRes = getDocumentWithWebViewFallback(packUrl)
+                                    packDoc = retryRes.second
+                                }
                                 if (packDoc == null) return@async null
                                 val episodeUrls = mutableListOf<Pair<String, String>>() // name to url
                                 
@@ -406,7 +417,7 @@ class KatMovieHDProvider : MainAPI() {
                 }
             }
             
-            return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodes) {
+            return newTvSeriesLoadResponse(displayTitle, url, TvType.TvSeries, episodes) {
                 this.posterUrl = poster
                 this.backgroundPosterUrl = backdropPoster
                 this.plot = description
@@ -416,13 +427,13 @@ class KatMovieHDProvider : MainAPI() {
             // Movie
             if (qualityLinks.isNotEmpty()) {
                 val jsonArray = JSONArray()
-                qualityLinks.forEach { (quality, href) ->
+                qualityLinks.distinctBy { it.second }.forEach { (quality, href) ->
                     val obj = JSONObject()
                     obj.put("quality", quality)
                     obj.put("url", href)
                     jsonArray.put(obj)
                 }
-                return newMovieLoadResponse(title, url, TvType.Movie, listOf(EpisodeLink(jsonArray.toString()))) {
+                return newMovieLoadResponse(displayTitle, url, TvType.Movie, listOf(EpisodeLink(jsonArray.toString()))) {
                     this.posterUrl = poster
                     this.backgroundPosterUrl = backdropPoster
                     this.plot = description
@@ -441,7 +452,7 @@ class KatMovieHDProvider : MainAPI() {
                 val text = a.text().trim()
                 links.add(MovieLink(name = text.ifEmpty { "Download Link" }, url = href))
             }
-            return newMovieLoadResponse(title, url, TvType.Movie, links.map { EpisodeLink(it.url) }) {
+            return newMovieLoadResponse(displayTitle, url, TvType.Movie, links.map { EpisodeLink(it.url) }) {
                 this.posterUrl = poster
                 this.backgroundPosterUrl = backdropPoster
                 this.plot = description
@@ -465,6 +476,31 @@ class KatMovieHDProvider : MainAPI() {
                 val jsonArray = JSONArray(data)
                 for (i in 0 until jsonArray.length()) {
                     val obj = jsonArray.getJSONObject(i)
+                    
+                    // EpisodeLink serializes with key "source" not "url".
+                    // Movies use EpisodeLink(jsonArray.toString()) so data arrives as:
+                    //   [{"source":"[{\"quality\":\"720P\",\"url\":\"https://...\"}]"}]
+                    // Unwrap it: parse the inner JSON and feed those entries into urlsToResolve directly.
+                    if (obj.has("source") && !obj.has("url")) {
+                        val innerStr = obj.getString("source")
+                        if (innerStr.startsWith("[")) {
+                            try {
+                                val innerArray = JSONArray(innerStr)
+                                for (j in 0 until innerArray.length()) {
+                                    val inner = innerArray.getJSONObject(j)
+                                    val innerUrl = inner.optString("url", "")
+                                    val innerQuality = inner.optString("quality", "1080P")
+                                    if (innerUrl.isNotBlank()) {
+                                        urlsToResolve.add(innerUrl to innerQuality)
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                Log.e("KatMovieHD", "Failed parsing inner source JSON: ${e.message}")
+                            }
+                        }
+                        continue // done with this outer entry
+                    }
+                    
                     val url = obj.getString("url")
                     val quality = obj.optString("quality", "1080P")
                     
@@ -500,8 +536,13 @@ class KatMovieHDProvider : MainAPI() {
                     } else if (url.contains("/archives/") || url.contains("/pack/") || (url.contains("links.") && !url.contains("/file/"))) {
                         val (_, packDoc, _) = getDocumentWithWebViewFallback(url)
                         if (packDoc != null) {
-                            val contentElements = packDoc.select("div.single-main-content a[href], div.entry-content a[href]")
-                            contentElements.forEach { el ->
+                            // Try narrow WordPress selectors first; fall back to all anchors
+                            // (needed for non-KatMovieHD link pages like dramashindi.online)
+                            var elements = packDoc.select("div.single-main-content a[href], div.entry-content a[href]")
+                            if (elements.isEmpty()) {
+                                elements = packDoc.select("a[href]")
+                            }
+                            elements.forEach { el ->
                                 val href = el.attr("href") ?: return@forEach
                                 val isValidProvider = href.contains("/locked?redirect=") || 
                                                        href.contains("/file/") || 
@@ -532,7 +573,44 @@ class KatMovieHDProvider : MainAPI() {
                         } else {
                             url
                         }
-                        urlsToResolve.add(absoluteUrl to quality)
+                        // If this URL is from the KatMovieHD domain itself, it's an
+                        // intermediate movie quality page — fetch it to get the real provider links
+                        val isKatDomainPage = domains.any { absoluteUrl.contains(it.removePrefix("https://").removePrefix("http://"), ignoreCase = true) } ||
+                            absoluteUrl.contains("katmoviehd", ignoreCase = true) ||
+                            absoluteUrl.contains("katdrama", ignoreCase = true)
+                        if (isKatDomainPage) {
+                            Log.i("KatMovieHD", "Movie intermediate page detected, fetching: $absoluteUrl")
+                            val (_, interDoc, _) = getDocumentWithWebViewFallback(absoluteUrl)
+                            if (interDoc != null) {
+                                interDoc.select("div.single-main-content a[href], div.entry-content a[href]").forEach { el ->
+                                    val href = el.attr("href") ?: return@forEach
+                                    val isValidProvider = href.contains("/locked?redirect=") ||
+                                                           href.contains("/file/") ||
+                                                           href.contains("/drive/") ||
+                                                           href.contains("hubcloud", ignoreCase = true) ||
+                                                           href.contains("gdflix", ignoreCase = true) ||
+                                                           href.contains("send.cm", ignoreCase = true) ||
+                                                           href.contains("send.now", ignoreCase = true) ||
+                                                           href.contains("sendcm", ignoreCase = true) ||
+                                                           href.contains("pixeldrain", ignoreCase = true) ||
+                                                           href.contains("gofile", ignoreCase = true)
+                                    if (isValidProvider && !href.startsWith("#")) {
+                                        val absHref = if (href.startsWith("/")) {
+                                            val uri = URI(absoluteUrl)
+                                            "${uri.scheme}://${uri.host}$href"
+                                        } else {
+                                            href
+                                        }
+                                        urlsToResolve.add(absHref to quality)
+                                    }
+                                }
+                            } else {
+                                Log.w("KatMovieHD", "Could not fetch intermediate movie page: $absoluteUrl")
+                                urlsToResolve.add(absoluteUrl to quality)
+                            }
+                        } else {
+                            urlsToResolve.add(absoluteUrl to quality)
+                        }
                     }
                 }
             } else if (data.startsWith("http")) {
@@ -649,6 +727,37 @@ class KatMovieHDProvider : MainAPI() {
             // Direct provider links parsed from pack pages
             val lowerUrl = fileUrl.lowercase()
             when {
+                // Archive/pack pages containing multiple provider links (e.g. links.dramashindi.online/archives/1793)
+                // These appear in movie data — each archive page has a HubCloud and GDFlix link inside.
+                // Match by BOTH href AND anchor text since some hosts use redirect wrappers over the real URL.
+                lowerUrl.contains("/archives/") || (lowerUrl.contains("links.") && !lowerUrl.contains("/file/")) -> {
+                    val (_, packDoc, _) = getDocumentWithWebViewFallback(fileUrl)
+                    if (packDoc != null) {
+                        var elements = packDoc.select("div.single-main-content a[href], div.entry-content a[href]")
+                        if (elements.isEmpty()) elements = packDoc.select("a[href]")
+                        elements.forEach { el ->
+                            val href = el.attr("href").takeIf { it.isNotBlank() } ?: return@forEach
+                            val text = el.text().trim().lowercase()
+                            val absHref = if (href.startsWith("/")) {
+                                val uri = URI(fileUrl)
+                                "${uri.scheme}://${uri.host}$href"
+                            } else href
+                            // Route by href OR text so redirect-wrapped HubCloud links are caught by text
+                            when {
+                                absHref.contains("gdflix", ignoreCase = true) || text.contains("gdflix") ->
+                                    resolveGDFlix(absHref, quality, subtitleCallback, callback)
+                                absHref.contains("hubcloud", ignoreCase = true) || text.contains("hubcloud") ->
+                                    resolveHubCloud(absHref, quality, subtitleCallback, callback)
+                                absHref.contains("send.cm", ignoreCase = true) || absHref.contains("send.now", ignoreCase = true) ->
+                                    resolveSendCm(absHref, quality, callback)
+                                absHref.contains("gofile.io", ignoreCase = true) ->
+                                    resolveGoFile(absHref, quality, callback)
+                                absHref.contains("pixeldrain", ignoreCase = true) ->
+                                    resolvePixeldrain(absHref, quality, callback)
+                            }
+                        }
+                    }
+                }
                 lowerUrl.contains("gdflix") -> {
                     resolveGDFlix(fileUrl, quality, subtitleCallback, callback)
                 }
@@ -1088,13 +1197,7 @@ class KatMovieHDProvider : MainAPI() {
                     urls.add("HubCloud [Fast CDN]" to r2Match)
                 }
 
-                // 2. FSL link (pixel.hubcloud.cx or fsl link) -> "HubCloud [FSL]"
-                val fslMatch = Regex("""https?://pixel\.hubcloud\.cx/[^"'\s<]+""").find(html)?.value
-                if (!fslMatch.isNullOrBlank()) {
-                    urls.add("HubCloud [FSL]" to fslMatch)
-                }
-
-                // 3. Dynamic inline script variable for Pixeldrain -> "Pixel"
+                // 2. Dynamic inline script variable for Pixeldrain -> "Pixel"
                 val pxlMatch = Regex("""var\s+pxl\s*=\s*["']([^"']+)["']""").find(html)?.groupValues?.get(1)
                 if (!pxlMatch.isNullOrBlank() && !pxlMatch.contains("negn6f")) {
                     urls.add("Pixel" to pxlMatch)
@@ -1106,12 +1209,22 @@ class KatMovieHDProvider : MainAPI() {
                     if (href.contains("negn6f")) return@forEach
 
                     when {
-                        text.contains("10gbps") || href.contains("10gbps") -> urls.add("HubCloud [10Gbps]" to href)
-                        text.contains("pixel") || href.contains("pixel") || href.contains("pixeldrain") -> urls.add("Pixel" to href)
-                        text.contains("fslv2") || href.contains("fslv2") -> urls.add("HubCloud [FSLv2]" to href)
-                        text.contains("fsl") || href.contains("fsl") -> urls.add("HubCloud [FSL]" to href)
-                        text.contains("buzz") || href.contains("buzz") || href.contains("bzzhr") -> urls.add("HubCloud [Buzz]" to href)
-                        text.contains("gofile") || href.contains("gofile") -> urls.add("Gofile" to href)
+                        text.contains("fslv2") || href.contains("fslv2") || href.contains("latent.click") -> {
+                            urls.add("HubCloud [FSLv2]" to href)
+                        }
+                        text.contains("10gbps") || href.contains("10gbps") || href.contains("pixel.hubcloud.cx") -> {
+                            if (urls.none { it.second == href }) urls.add("HubCloud [FSL]" to href)
+                        }
+                        text.contains("fsl") -> {
+                            if (urls.any { it.first == "HubCloud [FSL]" }) {
+                                urls.add("HubCloud [FSLv2]" to href)
+                            } else {
+                                urls.add("HubCloud [FSL]" to href)
+                            }
+                        }
+                        text.contains("pixel") || href.contains("pixel") || href.contains("pixeldrain") -> {
+                            if (urls.none { it.second == href }) urls.add("Pixel" to href)
+                        }
                     }
                 }
                 return urls.distinctBy { it.second }

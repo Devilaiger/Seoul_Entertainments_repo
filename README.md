@@ -38,11 +38,17 @@ If the one-click method does not work:
 
 ## 📦 Available Extensions
 
-| Name | Language | Description |
-| --- | --- | --- |
-| **KatMovieHD** | English / Multi | Premium high-quality movies and TV Series. |
-| **MPlayer** | Hindi / Multi | Indian Movies/Series/Kdrama(Hindi Dubbed). |
-| **MovieLinkBD** | Multi | MovieLinkBD Provider. |
+| Extension | Language | Description | Author |
+| --- | --- | --- | --- |
+| **CastleTV** | Tamil / Multi | Castle TV Movies and Series Provider | `seoulentertainments` |
+| **CineStream** | English / Multi | Movies, Series, Anime, AsianDrama and Torrents | `seoulentertainments` |
+| **HDrezka** | Russian / Multi | AsianDrama, Anime, TvSeries, Movie | `seoulentertainments` |
+| **KatMovieHD** | English / Multi | KatMovieHD Provider (In-House) | `seoulentertainments` |
+| **MovieBox** | Tamil / Multi | Multi Language Movies and Series Provider | `seoulentertainments` |
+| **MovieBox IN** | Tamil / Multi | Multi Language Movies and Series Provider (Local region) | `seoulentertainments` |
+| **MovieLinkBD** | Bengali / Multi | MovieLinkBD Provider | `seoulentertainments` |
+| **MPlayer** | Hindi / Multi | Indian Movies/Series/Kdrama (Hindi Dubbed) | `seoulentertainments` |
+
 
 ---
 

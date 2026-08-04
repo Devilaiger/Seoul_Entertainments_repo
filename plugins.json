@@ -1,5 +1,26 @@
 [
     {
+        "iconUrl": "https://github.com/NivinCNC/CNCVerse-Cloud-Stream-Extension/raw/refs/heads/master/CastleTvProvider/icon.png",
+        "fileHash": "sha256-be6b5c9b20bc0ce0c054ba79ebefee9910b6be9693d091c0caed82edc388c6e6",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
+        "fileSize": 64579,
+        "status": 1,
+        "language": "ta",
+        "authors": [
+            "CNCVerse"
+        ],
+        "tvTypes": [
+            "Movie",
+            "TvSeries"
+        ],
+        "version": 30,
+        "internalName": "CastleTvProvider",
+        "description": "Castle TV Movies and Series Provider",
+        "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/CastleTvProvider.cs3",
+        "name": "CastleTvProvider"
+    },
+    {
         "iconUrl": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/master/CineStream/icon.png",
         "fileHash": "sha256-794c3dab2b2d459cde60b9a4641921fd9f0781202a757011495686e42cf3e868",
         "apiVersion": 1,
@@ -65,6 +86,48 @@
         "description": "KatMovieHD Provider (In-House)",
         "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/KatMovieHDProvider.cs3",
         "name": "KatMovieHDProvider"
+    },
+    {
+        "iconUrl": "https://github.com/NivinCNC/CNCVerse-Cloud-Stream-Extension/raw/refs/heads/master/MovieBoxProvider/icon.png",
+        "fileHash": "sha256-22044f683620c07c0ea5c2a0768ad9c42fdeec7c49e245353d2d94eb50267e96",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
+        "fileSize": 70391,
+        "status": 1,
+        "language": "ta",
+        "authors": [
+            "seoulentertainments"
+        ],
+        "tvTypes": [
+            "Movie",
+            "TvSeries"
+        ],
+        "version": 32,
+        "internalName": "MovieBoxProvider",
+        "description": "Multi Language Movies and Series Provider",
+        "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/MovieBoxProvider.cs3",
+        "name": "MovieBoxProvider"
+    },
+    {
+        "iconUrl": "https://github.com/NivinCNC/CNCVerse-Cloud-Stream-Extension/raw/refs/heads/master/MovieBoxProviderIN/icon.png",
+        "fileHash": "sha256-9aa6d5042e138fb9f9142c9b92d2318b8be0f6daeb49f03f8274a8de30e1d384",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
+        "fileSize": 68043,
+        "status": 1,
+        "language": "ta",
+        "authors": [
+            "seoulentertainments"
+        ],
+        "tvTypes": [
+            "Movie",
+            "TvSeries"
+        ],
+        "version": 34,
+        "internalName": "MovieBoxProviderIN",
+        "description": "Multi Language Movies and Series Provider (Local homepage based on region)",
+        "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/MovieBoxProviderIN.cs3",
+        "name": "MovieBoxProviderIN"
     },
     {
         "fileHash": "sha256-c0f638fbed9e18aa785d4f8cda54e6d4ea7f530edcdde3572dfb616fe343085b",

@@ -1,4 +1,4 @@
-package com.cncverse
+package com.seoulentertainment.castletv
 
 import com.lagradost.cloudstream3.plugins.CloudstreamPlugin
 import com.lagradost.cloudstream3.plugins.Plugin

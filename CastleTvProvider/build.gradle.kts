@@ -2,6 +2,7 @@
 version = 30
 
 android {
+    namespace = "com.seoulentertainment.castletv"
     buildFeatures {
         buildConfig = true
     }
@@ -12,7 +13,7 @@ cloudstream {
     // All of these properties are optional, you can safely remove them
 
     description = "Castle TV Movies and Series Provider"
-    authors = listOf("CNCVerse")
+    authors = listOf("seoulentertainments")
 
     /**
      * Status int as the following:

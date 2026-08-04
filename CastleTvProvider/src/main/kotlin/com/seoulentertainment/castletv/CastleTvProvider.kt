@@ -1,4 +1,4 @@
-package com.cncverse
+package com.seoulentertainment.castletv
 
 import android.content.Context
 import com.lagradost.cloudstream3.*

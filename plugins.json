@@ -54,7 +54,7 @@
         "status": 1,
         "language": "en",
         "authors": [
-            "SeoulEntertainment"
+            "seoulentertainments"
         ],
         "tvTypes": [
             "Movie",
@@ -67,10 +67,10 @@
         "name": "KatMovieHDProvider"
     },
     {
-        "fileHash": "sha256-3e6e6ec4c4dc6407d6b7e8dd8096968a38895d7104b54b99a73e73e9304196b7",
+        "fileHash": "sha256-c0f638fbed9e18aa785d4f8cda54e6d4ea7f530edcdde3572dfb616fe343085b",
         "apiVersion": 1,
         "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
-        "fileSize": 41468,
+        "fileSize": 49242,
         "status": 1,
         "language": "bn",
         "authors": [

@@ -1,6 +1,8 @@
 @file:Suppress("DEPRECATION")
-package com.cncverse
+package com.seoulentertainment.movielinkbd
 
+import com.lagradost.cloudstream3.Actor
+import com.lagradost.cloudstream3.ActorData
 import com.lagradost.cloudstream3.Episode
 import com.lagradost.cloudstream3.Score
 import com.lagradost.cloudstream3.HomePageList
@@ -264,20 +266,25 @@ class MovieLinkBDProvider : MainAPI() {
         val year = Regex("\\((\\d{4})\\)").find(rawTitle)?.groupValues?.get(1)?.toIntOrNull()
 
         // Poster
-        val poster = doc.selectFirst("img.poster, img[class*='poster'], .poster img, .thumb img, img[src*='poster'], img[src*='uploads']")
-            ?.let { it.attr("data-src").ifEmpty { it.attr("src") } }
-            ?.takeIf { it.isNotEmpty() }
+        val poster = doc.selectFirst(".image-container-view img, .movie-card-view img, img.poster, img[class*='poster'], .poster img, .thumb img, img[src*='tmdb.org'], img[src*='uploads'], .screenshot-wrapper img")
+            ?.let { el -> el.attr("data-src").ifEmpty { el.attr("src") } }
+            ?.takeIf { it.isNotEmpty() && !it.contains("mlbd_load.svg") }
 
-        // Meta info block — the site renders label: value pairs
+        // Meta info block — parse specific info lines cleanly
         fun metaVal(label: String): String? {
-            return doc.select("li, p, span, div").firstOrNull { el ->
-                el.text().contains(label, ignoreCase = true)
-            }?.text()?.substringAfter(":")?.trim()
+            val el = doc.select("p.info-line, li.flex-item, div.movie-extra-info p").firstOrNull { item ->
+                item.text().contains(label, ignoreCase = true)
+            } ?: return null
+            val raw = el.text()
+            val value = if (raw.contains(":")) raw.substringAfter(":") else raw.substringAfter(label)
+            return value.trim()
         }
 
         // Storyline / plot
         val plot = doc.selectFirst(".storyline p, .storyline, [class*='story'] p, [class*='plot']")
             ?.text()?.trim()
+            ?: doc.select("p.info-line").firstOrNull { it.text().contains("Storyline", ignoreCase = true) }
+                ?.text()?.substringAfter(":")?.trim()
             ?: metaVal("Storyline")
 
         // Genre, cast, language
@@ -287,27 +294,30 @@ class MovieLinkBDProvider : MainAPI() {
         val rating = doc.selectFirst("[class*='imdb'], [class*='rating']")?.text()
             ?.let { Regex("[0-9.]+").find(it)?.value?.toFloatOrNull() }
 
-        val fullPlot = buildString {
-            language?.let { append("Language: $it\n") }
-            genre?.let { append("Genre: $it\n") }
-            cast?.let { append("Cast: $it\n") }
-            plot?.let { append("\n$it") }
-        }.trim()
+        val tagsList = genre?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() }
+        val actorsList = cast?.split(",")?.map { ActorData(Actor(it.trim())) }?.filter { it.actor.name.isNotEmpty() }
+        val cleanPlot = buildString {
+            if (!language.isNullOrEmpty()) append("Language: $language\n\n")
+            if (!plot.isNullOrEmpty()) append(plot)
+        }.trim().ifEmpty { null }
 
-        // Determine if this is a series or movie by the URL path
-        val isSeries = url.contains("/series/") || url.contains("/anime/")
+        // Determine if this is a series or movie by URL or page tags
+        val isSeries = url.contains("/series/") ||
+                       url.contains("/anime/") ||
+                       url.contains("/ongoing") ||
+                       url.contains("/drama") ||
+                       doc.selectFirst("span.type")?.text()?.contains("series", ignoreCase = true) == true ||
+                       doc.selectFirst("b.text-orange")?.text()?.contains("series", ignoreCase = true) == true ||
+                       doc.select("div.ep-card, [data-ep]").isNotEmpty() ||
+                       doc.select("h3:contains(Episode-wise Links)").isNotEmpty()
 
         // ── Download links ──────────────────────────────────────────────────
-        // Each quality button is an <a href="/getLink/..."> on the detail page.
-        // We collect them grouped by episode sections (for series) or flat (for movies).
-
-        // All getLink anchors
-        val linkAnchors = doc.select("a[href*='/getLink/']")
-        // Watch online anchors
-        val watchAnchors = doc.select("a[href*='/getWatch/']")
+        // Links exist as /watch/, /file/, /getLink/, or /getWatch/ anchors
+        val linkAnchors = doc.select("a[href*='/file/'], a[href*='/getLink/']")
+        val watchAnchors = doc.select("a[href*='/watch/'], a[href*='/getWatch/']")
 
         if (!isSeries) {
-            // Movie: collect all download links as quality|getLink pairs
+            // Movie: collect all download links as quality|link pairs
             val linksData = (linkAnchors + watchAnchors).mapNotNull { a ->
                 val href = a.attr("abs:href").ifEmpty {
                     val h = a.attr("href")
@@ -322,7 +332,9 @@ class MovieLinkBDProvider : MainAPI() {
             return newMovieLoadResponse(rawTitle, url, TvType.Movie, linksData) {
                 this.posterUrl = poster
                 this.year = year
-                this.plot = fullPlot.takeIf { it.isNotEmpty() }
+                this.plot = cleanPlot
+                this.tags = tagsList
+                this.actors = actorsList
                 this.score = rating?.let { Score.from10(it) }
             }
         }
@@ -338,7 +350,7 @@ class MovieLinkBDProvider : MainAPI() {
                     card.selectFirst("h1, h2, h3, h4, h5, h6")?.text() ?: ""
                 }
                 val epNum = Regex("\\d+").find(epText)?.value?.toIntOrNull() ?: 1
-                val cardLinks = card.select("a[href*='/getLink/'], a[href*='/getWatch/']")
+                val cardLinks = card.select("a[href*='/watch/'], a[href*='/file/'], a[href*='/getLink/'], a[href*='/getWatch/']")
                 if (cardLinks.isNotEmpty()) {
                     val epUrl = cardLinks.mapNotNull { a ->
                         val href = a.attr("abs:href").ifEmpty {
@@ -388,10 +400,10 @@ class MovieLinkBDProvider : MainAPI() {
                     var sib = section.nextElementSibling()
                     while (sib != null && !sib.tagName().matches(Regex("h[1-6]"))) {
                         val anchors = mutableListOf<org.jsoup.nodes.Element>()
-                        if (sib.tagName() == "a" && (sib.attr("href").contains("/getLink/") || sib.attr("href").contains("/getWatch/"))) {
+                        if (sib.tagName() == "a" && (sib.attr("href").contains("/getLink/") || sib.attr("href").contains("/getWatch/") || sib.attr("href").contains("/watch/") || sib.attr("href").contains("/file/"))) {
                             anchors.add(sib)
                         }
-                        anchors.addAll(sib.select("a[href*='/getLink/'], a[href*='/getWatch/']"))
+                        anchors.addAll(sib.select("a[href*='/watch/'], a[href*='/file/'], a[href*='/getLink/'], a[href*='/getWatch/']"))
 
                         anchors.forEach { a ->
                             val href = a.attr("abs:href").ifEmpty {
@@ -453,7 +465,9 @@ class MovieLinkBDProvider : MainAPI() {
         return newTvSeriesLoadResponse(rawTitle, url, TvType.TvSeries, episodesData) {
             this.posterUrl = poster
             this.year = year
-            this.plot = fullPlot.takeIf { it.isNotEmpty() }
+            this.plot = cleanPlot
+            this.tags = tagsList
+            this.actors = actorsList
             this.score = rating?.let { Score.from10(it) }
         }
     }
@@ -485,8 +499,8 @@ class MovieLinkBDProvider : MainAPI() {
                             linkUrl.contains("/getLink/") -> {
                                 resolveGetLink(linkUrl, qualityLabel, refererUrl, callback)
                             }
-                            // getWatch page → resolve to stream URL
-                            linkUrl.contains("/getWatch/") -> {
+                            // getWatch or /watch/ page → resolve to stream URL
+                            linkUrl.contains("/getWatch/") || linkUrl.contains("/watch/") -> {
                                 resolveGetWatch(linkUrl, qualityLabel, refererUrl, callback)
                             }
                             // Direct file link
@@ -518,64 +532,62 @@ class MovieLinkBDProvider : MainAPI() {
             val reqHeaders = this@MovieLinkBDProvider.headers + mapOf("Referer" to refererUrl)
             val doc = httpGetDoc(getLinkUrl, reqHeaders)
 
-            // 1. Check for iframe or video source embedded directly in the page (in case it acts as Watch Online)
-            val videoSrc = doc.selectFirst("video source, video[src]")?.attr("src")
-                ?: doc.selectFirst("iframe[src]")?.attr("src")
-            if (!videoSrc.isNullOrEmpty()) {
-                val streamUrl = if (videoSrc.startsWith("http")) videoSrc else "$base$videoSrc"
-                val fixedStreamUrl = fixUrlDomain(streamUrl, base)
-                if (fixedStreamUrl.contains("xcloud") || fixedStreamUrl.contains("mcloud")) {
-                    resolveXCloud(fixedStreamUrl, qualityLabel, callback)
-                    return
-                } else if (fixedStreamUrl.startsWith("http") && !fixedStreamUrl.contains("movielinkbd") && !fixedStreamUrl.contains("telegram")) {
-                    com.lagradost.cloudstream3.utils.loadExtractor(
-                        fixedStreamUrl, getLinkUrl,
-                        subtitleCallback = {},
-                        callback = callback
-                    )
-                    return
-                } else if (!fixedStreamUrl.contains("movielinkbd") && !fixedStreamUrl.contains("telegram")) {
-                    val quality = labelToQuality(qualityLabel)
-                    val type = if (fixedStreamUrl.contains("m3u8")) ExtractorLinkType.M3U8 else ExtractorLinkType.VIDEO
-                    callback(
-                        ExtractorLink(
-                            source = name,
-                            name = "$name [Stream]",
-                            url = fixedStreamUrl,
-                            referer = getLinkUrl,
-                            quality = quality,
-                            type = type,
-                            headers = mapOf(
-                                "User-Agent" to this@MovieLinkBDProvider.headers["User-Agent"]!!,
-                                "Referer" to getLinkUrl
-                            )
-                        )
-                    )
-                    return
-                }
-            }
-
-            // 2. ONE CLICK DOWNLOAD → /file/... direct link
-            val fileAnchor = doc.selectFirst("a[href*='/file/']")
-            if (fileAnchor != null) {
+            // 1. Process all file download anchors (/file/...)
+            val fileAnchors = doc.select("a[href*='/file/']")
+            for (fileAnchor in fileAnchors) {
                 val href = fileAnchor.attr("href")
                 val fileUrl = if (href.startsWith("http")) href else "$base$href"
                 val fixedFileUrl = fixUrlDomain(fileUrl, base)
                 resolveDirectFile(fixedFileUrl, qualityLabel, getLinkUrl, callback)
             }
 
-            // 3. Check for external anchor links (e.g. mCloud)
-            // NOTE: Use for-loop (not forEach) so suspend calls inside work correctly.
+            // 2. Process iframe / video source embedded streams
+            val mediaElements = doc.select("video source, video[src], iframe[src]")
+            for (el in mediaElements) {
+                val videoSrc = el.attr("src")
+                if (videoSrc.isNotEmpty()) {
+                    val streamUrl = if (videoSrc.startsWith("http")) videoSrc else "$base$videoSrc"
+                    val fixedStreamUrl = fixUrlDomain(streamUrl, base)
+                    if (fixedStreamUrl.contains("xcloud") || fixedStreamUrl.contains("mcloud")) {
+                        resolveXCloud(fixedStreamUrl, qualityLabel, callback)
+                    } else if (fixedStreamUrl.startsWith("http") && !fixedStreamUrl.contains("movielinkbd") && !fixedStreamUrl.contains("telegram")) {
+                        try {
+                            com.lagradost.cloudstream3.utils.loadExtractor(
+                                fixedStreamUrl, getLinkUrl,
+                                subtitleCallback = {},
+                                callback = callback
+                            )
+                        } catch (_: Exception) {}
+                    } else if (!fixedStreamUrl.contains("movielinkbd") && !fixedStreamUrl.contains("telegram")) {
+                        val quality = if (qualityLabel.equals("Stream", ignoreCase = true) || qualityLabel.equals("Unknown", ignoreCase = true)) Qualities.P1080.value else labelToQuality(qualityLabel)
+                        val type = if (fixedStreamUrl.contains("m3u8")) ExtractorLinkType.M3U8 else ExtractorLinkType.VIDEO
+                        callback(
+                            ExtractorLink(
+                                source = name,
+                                name = "$name Stream [$qualityLabel]",
+                                url = fixedStreamUrl,
+                                referer = getLinkUrl,
+                                quality = quality,
+                                type = type,
+                                headers = mapOf(
+                                    "User-Agent" to this@MovieLinkBDProvider.headers["User-Agent"]!!,
+                                    "Referer" to getLinkUrl
+                                )
+                            )
+                        )
+                    }
+                }
+            }
+
+            // 3. Process all external mirror / anchor links (e.g. xcloud, mcloud, xplay)
             for (a in doc.select("a[href]")) {
                 val href = a.attr("href").trim()
-                if (href.isEmpty() || href.contains("/file/")) continue
+                if (href.isEmpty() || href.contains("/file/") || href.contains("/getLink/")) continue
                 if (href.startsWith("http") && !href.contains("movielinkbd") &&
                     !href.contains("telegram") && !href.contains("google.com/store")) {
                     if (href.contains("xcloud") || href.contains("mcloud")) {
                         resolveXCloud(href, qualityLabel, callback)
                     } else {
-                        // Wrap in try/catch — loadExtractor throws for unknown extractors,
-                        // and we must NOT let that abort processing of the xcloud anchor.
                         try {
                             com.lagradost.cloudstream3.utils.loadExtractor(
                                 href, getLinkUrl,
@@ -589,6 +601,11 @@ class MovieLinkBDProvider : MainAPI() {
         } catch (_: Exception) { }
     }
 
+    private fun isTelegramUrl(url: String): Boolean {
+        val lower = url.lowercase()
+        return lower.contains("t.me/") || lower.contains("telegram.") || lower.contains("tg.me/") || lower.contains("telegram.org")
+    }
+
     // ── Resolve /getWatch/ to stream URL ────────────────────────────────────
     private suspend fun resolveGetWatch(
         getWatchUrl: String,
@@ -600,75 +617,109 @@ class MovieLinkBDProvider : MainAPI() {
             val base = getBase()
             val requestHeaders = this@MovieLinkBDProvider.headers + mapOf("Referer" to refererUrl)
             val html = httpGetText(getWatchUrl, requestHeaders)
+            val unescapedHtml = html.replace("\\/", "/")
             val doc = org.jsoup.Jsoup.parse(html, getWatchUrl)
 
-            // 1. Check for /watch/ anchor (leads to actual player page)
+            val effectiveQualityLabel = if (qualityLabel.equals("Stream", ignoreCase = true) || qualityLabel.equals("Unknown", ignoreCase = true) || qualityLabel.isEmpty()) "1080p Stream" else qualityLabel
+            val quality = if (qualityLabel.equals("Stream", ignoreCase = true) || qualityLabel.equals("Unknown", ignoreCase = true) || qualityLabel.isEmpty()) Qualities.P1080.value else labelToQuality(qualityLabel)
+
+            // 1. Direct Regex extraction on HTML (const SRC, file, src, m3u8, mp4)
+            val srcRegex = Regex("""const\s+SRC\s*=\s*["'](https?://[^"']+)["']""")
+            val fileRegex = Regex("""(?:file|src)\s*:\s*["'](https?://[^"']+\.(?:m3u8|mp4|mkv)[^"']*)""")
+            val m3u8Regex = Regex("""(https?://[^\s'"]+\.m3u8[^\s'"]*)""")
+            val mp4Regex = Regex("""(https?://[^\s'"]+\.(?:mp4|mkv)[^\s'"]*)""")
+
+            val directStreamUrl = srcRegex.find(unescapedHtml)?.groupValues?.get(1)
+                ?: fileRegex.find(unescapedHtml)?.groupValues?.get(1)
+                ?: m3u8Regex.find(unescapedHtml)?.value
+                ?: mp4Regex.find(unescapedHtml)?.value
+
+            if (!directStreamUrl.isNullOrEmpty() && !isTelegramUrl(directStreamUrl)) {
+                val resolvedUrl = if (directStreamUrl.startsWith("http")) directStreamUrl else "$base$directStreamUrl"
+                val fixedStreamUrl = fixUrlDomain(resolvedUrl, base)
+
+                if (fixedStreamUrl.contains("xcloud") || fixedStreamUrl.contains("mcloud")) {
+                    resolveXCloud(fixedStreamUrl, effectiveQualityLabel, callback)
+                    return
+                }
+                val type = if (fixedStreamUrl.contains("m3u8")) ExtractorLinkType.M3U8 else ExtractorLinkType.VIDEO
+                callback(
+                    ExtractorLink(
+                        source = name,
+                        name = "$name Watch Online [$effectiveQualityLabel]",
+                        url = fixedStreamUrl,
+                        referer = getWatchUrl,
+                        quality = quality,
+                        type = type,
+                        headers = mapOf(
+                            "User-Agent" to this@MovieLinkBDProvider.headers["User-Agent"]!!,
+                            "Referer" to getWatchUrl
+                        )
+                    )
+                )
+                return
+            }
+
+            // 2. Check for nested /watch/ anchor (if getWatchUrl was a redirect/landing page)
             val watchAnchor = doc.selectFirst("a[href*='/watch/']")
             if (watchAnchor != null) {
                 val href = watchAnchor.attr("href")
                 val watchUrl = if (href.startsWith("http")) href else "$base$href"
                 val fixedWatchUrl = fixUrlDomain(watchUrl, base)
-                
-                // Fetch the watch player page
-                val watchHeaders = this@MovieLinkBDProvider.headers + mapOf("Referer" to getWatchUrl)
-                val watchHtml = httpGetText(fixedWatchUrl, watchHeaders)
-                val unescapedWatchHtml = watchHtml.replace("\\/", "/")
+                if (fixedWatchUrl != getWatchUrl) {
+                    val watchHeaders = this@MovieLinkBDProvider.headers + mapOf("Referer" to getWatchUrl)
+                    val watchHtml = httpGetText(fixedWatchUrl, watchHeaders)
+                    val unescapedWatchHtml = watchHtml.replace("\\/", "/")
+                    val streamUrl = srcRegex.find(unescapedWatchHtml)?.groupValues?.get(1)
+                        ?: fileRegex.find(unescapedWatchHtml)?.groupValues?.get(1)
+                        ?: m3u8Regex.find(unescapedWatchHtml)?.value
+                        ?: mp4Regex.find(unescapedWatchHtml)?.value
 
-                val srcRegex = Regex("""const\s+SRC\s*=\s*["'](https?://[^"']+)["']""")
-                val watchRegex = Regex("""(https?://[^\s'"]+/watch/[^\s'"]*)""")
-                val m3u8Regex = Regex("""(https?://[^\s'"]+\.m3u8[^\s'"]*)""")
-                val mp4Regex = Regex("""(https?://[^\s'"]+\.(?:mp4|mkv)[^\s'"]*)""")
-
-                val streamUrl = srcRegex.find(unescapedWatchHtml)?.groupValues?.get(1)
-                    ?: watchRegex.find(unescapedWatchHtml)?.value
-                    ?: m3u8Regex.find(unescapedWatchHtml)?.value 
-                    ?: mp4Regex.find(unescapedWatchHtml)?.value
-
-                if (!streamUrl.isNullOrEmpty()) {
-                    val resolvedUrl = if (streamUrl.startsWith("http")) streamUrl else "$base$streamUrl"
-                    val fixedStreamUrl = fixUrlDomain(resolvedUrl, base)
-                    if (fixedStreamUrl.contains("xcloud") || fixedStreamUrl.contains("mcloud")) {
-                        resolveXCloud(fixedStreamUrl, qualityLabel, callback)
-                        return
-                    }
-                    val quality = labelToQuality(qualityLabel)
-                    val type = if (fixedStreamUrl.contains("m3u8")) ExtractorLinkType.M3U8 else ExtractorLinkType.VIDEO
-                    callback(
-                        ExtractorLink(
-                            source = name,
-                            name = "$name Watch Online [$qualityLabel]",
-                            url = fixedStreamUrl,
-                            referer = fixedWatchUrl,
-                            quality = quality,
-                            type = type,
-                            headers = mapOf(
-                                "User-Agent" to this@MovieLinkBDProvider.headers["User-Agent"]!!,
-                                "Referer" to fixedWatchUrl
+                    if (!streamUrl.isNullOrEmpty() && !isTelegramUrl(streamUrl)) {
+                        val resolvedUrl = if (streamUrl.startsWith("http")) streamUrl else "$base$streamUrl"
+                        val fixedStreamUrl = fixUrlDomain(resolvedUrl, base)
+                        if (fixedStreamUrl.contains("xcloud") || fixedStreamUrl.contains("mcloud")) {
+                            resolveXCloud(fixedStreamUrl, effectiveQualityLabel, callback)
+                            return
+                        }
+                        val type = if (fixedStreamUrl.contains("m3u8")) ExtractorLinkType.M3U8 else ExtractorLinkType.VIDEO
+                        callback(
+                            ExtractorLink(
+                                source = name,
+                                name = "$name Watch Online [$effectiveQualityLabel]",
+                                url = fixedStreamUrl,
+                                referer = fixedWatchUrl,
+                                quality = quality,
+                                type = type,
+                                headers = mapOf(
+                                    "User-Agent" to this@MovieLinkBDProvider.headers["User-Agent"]!!,
+                                    "Referer" to fixedWatchUrl
+                                )
                             )
                         )
-                    )
-                    return
+                        return
+                    }
                 }
             }
 
-            // 2. Check for /file/ anchor as fallback
+            // 3. Check for /file/ anchor as fallback
             val fileAnchor = doc.selectFirst("a[href*='/file/']")
             if (fileAnchor != null) {
                 val href = fileAnchor.attr("href")
                 val fileUrl = if (href.startsWith("http")) href else "$base$href"
                 val fixedFileUrl = fixUrlDomain(fileUrl, base)
-                resolveDirectFile(fixedFileUrl, qualityLabel, getWatchUrl, callback)
+                resolveDirectFile(fixedFileUrl, effectiveQualityLabel, getWatchUrl, callback)
                 return
             }
 
-            // 3. Fallback: search for inline video/iframe tags
+            // 4. Fallback: search for inline video/iframe tags
             val videoSrc = doc.selectFirst("video source, video[src]")?.attr("src")
                 ?: doc.selectFirst("iframe[src]")?.attr("src")
-            if (!videoSrc.isNullOrEmpty()) {
+            if (!videoSrc.isNullOrEmpty() && !isTelegramUrl(videoSrc)) {
                 val resolvedUrl = if (videoSrc.startsWith("http")) videoSrc else "$base$videoSrc"
                 val fixedResolvedUrl = fixUrlDomain(resolvedUrl, base)
                 if (fixedResolvedUrl.contains("xcloud") || fixedResolvedUrl.contains("mcloud")) {
-                    resolveXCloud(fixedResolvedUrl, qualityLabel, callback)
+                    resolveXCloud(fixedResolvedUrl, effectiveQualityLabel, callback)
                 } else if (fixedResolvedUrl.startsWith("http") && !fixedResolvedUrl.contains("movielinkbd")) {
                     com.lagradost.cloudstream3.utils.loadExtractor(
                         fixedResolvedUrl, getWatchUrl,
@@ -676,17 +727,19 @@ class MovieLinkBDProvider : MainAPI() {
                         callback = callback
                     )
                 } else {
-                    val quality = labelToQuality(qualityLabel)
                     val type = if (fixedResolvedUrl.contains("m3u8")) ExtractorLinkType.M3U8 else ExtractorLinkType.VIDEO
                     callback(
                         ExtractorLink(
                             source = name,
-                            name = "$name [Stream]",
+                            name = "$name Watch Online [$effectiveQualityLabel]",
                             url = fixedResolvedUrl,
                             referer = getWatchUrl,
                             quality = quality,
                             type = type,
-                            headers = headers
+                            headers = mapOf(
+                                "User-Agent" to this@MovieLinkBDProvider.headers["User-Agent"]!!,
+                                "Referer" to getWatchUrl
+                            )
                         )
                     )
                 }
@@ -708,7 +761,7 @@ class MovieLinkBDProvider : MainAPI() {
         val TAG = "XCloudResolver"
         android.util.Log.d(TAG, "[$qualityLabel] resolveXCloud called: $xcloudUrl")
 
-        val quality = labelToQuality(qualityLabel)
+        val quality = if (qualityLabel.equals("Stream", ignoreCase = true) || qualityLabel.equals("Unknown", ignoreCase = true)) Qualities.P1080.value else labelToQuality(qualityLabel)
         val userAgent = this@MovieLinkBDProvider.headers["User-Agent"] ?: ""
 
         // Build the /stream_TOKEN URL (xcloud embed player format)
@@ -736,7 +789,7 @@ class MovieLinkBDProvider : MainAPI() {
                 ?: m3u8Regex.find(unescaped)?.value
                 ?: mp4Regex.find(unescaped)?.value
 
-            if (!found.isNullOrEmpty()) {
+            if (!found.isNullOrEmpty() && !isTelegramUrl(found)) {
                 android.util.Log.d(TAG, "[$qualityLabel][$source] found: $found")
                 return found
             }
@@ -789,7 +842,7 @@ class MovieLinkBDProvider : MainAPI() {
         android.util.Log.d(TAG, "[$qualityLabel] final streamUrl: $streamUrl")
 
         // Only emit if we resolved a real media URL
-        if (!streamUrl.isNullOrEmpty()) {
+        if (!streamUrl.isNullOrEmpty() && !isTelegramUrl(streamUrl)) {
             val type = if (streamUrl.contains("m3u8")) ExtractorLinkType.M3U8 else ExtractorLinkType.VIDEO
             callback(
                 ExtractorLink(
@@ -822,36 +875,81 @@ class MovieLinkBDProvider : MainAPI() {
             val requestHeaders = this@MovieLinkBDProvider.headers + mapOf("Referer" to refererUrl)
             val html = httpGetText(fileUrl, requestHeaders)
             val unescapedHtml = html.replace("\\/", "/")
+            val fileDoc = org.jsoup.Jsoup.parse(html, fileUrl)
 
-            val srcRegex = Regex("""const\s+SRC\s*=\s*["'](https?://[^"']+)["']""")
-            val watchRegex = Regex("""(https?://[^\s'"]+/watch/[^\s'"]*)""")
-            val m3u8Regex = Regex("""(https?://[^\s'"]+\.m3u8[^\s'"]*)""")
-            val mp4Regex = Regex("""(https?://[^\s'"]+\.(?:mp4|mkv)[^\s'"]*)""")
+            val extractedLinks = mutableListOf<Pair<String, String>>() // Pair(serverName, streamUrl)
 
-            val streamUrl = srcRegex.find(unescapedHtml)?.groupValues?.get(1)
-                ?: watchRegex.find(unescapedHtml)?.value
-                ?: m3u8Regex.find(unescapedHtml)?.value 
-                ?: mp4Regex.find(unescapedHtml)?.value
+            // 1. Extract embedded const SRC or script URLs
+            val srcMatches = Regex("""const\s+SRC\s*=\s*["'](https?://[^"']+)["']""").findAll(unescapedHtml)
+            srcMatches.forEach { match ->
+                val u = match.groupValues[1]
+                if (!isTelegramUrl(u)) {
+                    val s = if (u.contains("xplay", ignoreCase = true)) "XPlay" else "Direct"
+                    extractedLinks.add(Pair(s, u))
+                }
+            }
 
-            if (!streamUrl.isNullOrEmpty()) {
-                val resolvedUrl = if (streamUrl.startsWith("http")) streamUrl else "$base$streamUrl"
+            // 2. Extract anchor links on the /file/ page (Direct and XPlay buttons)
+            fileDoc.select("a[href]").forEach { a ->
+                val href = a.attr("href").trim()
+                val btnText = a.text().trim()
+                if (href.startsWith("http") && !href.contains("movielinkbd") && !isTelegramUrl(href)) {
+                    val server = when {
+                        href.contains("xplay", ignoreCase = true) || btnText.contains("xplay", ignoreCase = true) -> "XPlay"
+                        href.contains("direct", ignoreCase = true) || btnText.contains("direct", ignoreCase = true) -> "Direct"
+                        btnText.contains("fast", ignoreCase = true) -> "Fast Server"
+                        else -> "Direct"
+                    }
+                    extractedLinks.add(Pair(server, href))
+                }
+            }
+
+            // 3. Fallback regexes for m3u8 / mp4 media URLs
+            val m3u8Matches = Regex("""(https?://[^\s'"]+\.m3u8[^\s'"]*)""").findAll(unescapedHtml)
+            m3u8Matches.forEach { match ->
+                val u = match.value
+                if (!isTelegramUrl(u)) {
+                    val s = if (u.contains("xplay", ignoreCase = true)) "XPlay" else "Direct"
+                    extractedLinks.add(Pair(s, u))
+                }
+            }
+
+            val mp4Matches = Regex("""(https?://[^\s'"]+\.(?:mp4|mkv)[^\s'"]*)""").findAll(unescapedHtml)
+            mp4Matches.forEach { match ->
+                val u = match.value
+                if (!isTelegramUrl(u)) {
+                    val s = if (u.contains("xplay", ignoreCase = true)) "XPlay" else "Direct"
+                    extractedLinks.add(Pair(s, u))
+                }
+            }
+
+            // Deduplicate by URL while preserving server names and excluding Telegram
+            val uniqueLinks = extractedLinks.distinctBy { it.second }.filterNot { isTelegramUrl(it.second) }
+
+            for ((serverName, rawStreamUrl) in uniqueLinks) {
+                val resolvedUrl = if (rawStreamUrl.startsWith("http")) rawStreamUrl else "$base$rawStreamUrl"
                 val fixedStreamUrl = fixUrlDomain(resolvedUrl, base)
-                val quality = labelToQuality(qualityLabel)
-                val type = if (fixedStreamUrl.contains("m3u8")) ExtractorLinkType.M3U8 else ExtractorLinkType.VIDEO
-                callback(
-                    ExtractorLink(
-                        source = name,
-                        name = "$name Direct [$qualityLabel]",
-                        url = fixedStreamUrl,
-                        referer = fileUrl,
-                        quality = quality,
-                        type = type,
-                        headers = mapOf(
-                            "User-Agent" to this@MovieLinkBDProvider.headers["User-Agent"]!!,
-                            "Referer" to fileUrl
+
+                if (fixedStreamUrl.contains("xcloud") || fixedStreamUrl.contains("mcloud")) {
+                    resolveXCloud(fixedStreamUrl, qualityLabel, callback)
+                } else {
+                    val quality = labelToQuality(qualityLabel)
+                    val type = if (fixedStreamUrl.contains("m3u8")) ExtractorLinkType.M3U8 else ExtractorLinkType.VIDEO
+                    callback(
+                        ExtractorLink(
+                            source = name,
+                            name = "$name $serverName [$qualityLabel]",
+                            url = fixedStreamUrl,
+                            referer = fileUrl,
+                            quality = quality,
+                            type = type,
+                            headers = mapOf(
+                                "User-Agent" to this@MovieLinkBDProvider.headers["User-Agent"]!!,
+                                "Referer" to fileUrl
+                            )
                         )
                     )
-                )
+                }
             }
         } catch (_: Exception) { }
     }

@@ -2,7 +2,7 @@
 version = 3
 
 android {
-    namespace = "com.cncverse"
+    namespace = "com.seoulentertainment.movielinkbd"
     buildFeatures {
         buildConfig = true
     }

@@ -11,7 +11,7 @@ android {
 cloudstream {
     language = "en"
     description = "KatMovieHD Provider (In-House)"
-    authors = listOf("SeoulEntertainment")
+    authors = listOf("seoulentertainments")
     status = 1
     tvTypes = listOf(
         "Movie",

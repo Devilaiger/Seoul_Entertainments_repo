@@ -1,14 +1,14 @@
 [
     {
         "iconUrl": "https://github.com/NivinCNC/CNCVerse-Cloud-Stream-Extension/raw/refs/heads/master/CastleTvProvider/icon.png",
-        "fileHash": "sha256-be6b5c9b20bc0ce0c054ba79ebefee9910b6be9693d091c0caed82edc388c6e6",
+        "fileHash": "sha256-e80a3840e7b1a3cdb1cdee329c6a1fe47bacc25e6bd00c43038d1bc0645f7be3",
         "apiVersion": 1,
         "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
-        "fileSize": 64579,
+        "fileSize": 64713,
         "status": 1,
         "language": "ta",
         "authors": [
-            "CNCVerse"
+            "seoulentertainments"
         ],
         "tvTypes": [
             "Movie",

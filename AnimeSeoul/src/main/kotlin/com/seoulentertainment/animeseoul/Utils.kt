@@ -75,13 +75,15 @@ open class Driveleech : ExtractorApi() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ) {
-        val baseUrl = getBaseUrl(url)
-        val document = if(url.contains("r?key=")) {
-            val temp = app.get(url).document.selectFirst("script")?.data()?.substringAfter("replace(\"")?.substringBefore("\")") ?: ""
+        val initialResp = app.get(url)
+        val finalUrl = initialResp.url
+        val baseUrl = getBaseUrl(finalUrl)
+        val document = if(finalUrl.contains("r?key=")) {
+            val temp = initialResp.document.selectFirst("script")?.data()?.substringAfter("replace(\"")?.substringBefore("\")") ?: ""
             app.get(baseUrl + temp).document
         }
         else {
-            app.get(url).document
+            initialResp.document
         }
 
         val fileName = document.select("ul > li.list-group-item:contains(Name)").text().substringAfter("Name : ")
@@ -101,20 +103,20 @@ open class Driveleech : ExtractorApi() {
             )
         }
 
-        document.select("div.text-center > a").amap { element ->
+        document.select("div.text-center > a, a.btn").amap { element ->
             val text = element.text()
             val href = element.attr("href")
             when {
-                text.contains("Cloud Download") -> { myCallback(href, "[Cloud]") }
-                text.contains("Instant Download") -> {
+                text.contains("Instant Download", ignoreCase = true) -> {
                     try{
-                        val instant = instantLink(href) ?: return@amap
-                        myCallback(instant, "[Instant(Download)]")
+                        val instant = instantLink(href) ?: href
+                        myCallback(instant, "[Instant]")
                     } catch (e: Exception) {
                         Log.d("Error:", e.toString())
                     }
                 }
-                text.contains("Resume Worker Bot") -> {
+                text.contains("Cloud Download", ignoreCase = true) -> { myCallback(href, "[Cloud]") }
+                text.contains("Resume Worker Bot", ignoreCase = true) -> {
                     try{
                         val resumeLink = resumeBot(href)
                         myCallback(resumeLink, "[ResumeBot]")
@@ -123,7 +125,7 @@ open class Driveleech : ExtractorApi() {
                     }
 
                 }
-                text.contains("Direct Links") -> {
+                text.contains("Direct Links", ignoreCase = true) -> {
                     try {
                         val link = baseUrl + href
                         CFType(link).forEach {
@@ -133,7 +135,7 @@ open class Driveleech : ExtractorApi() {
                         Log.d("Error:", e.toString())
                     }
                 }
-                text.contains("Resume Cloud") -> {
+                text.contains("Resume Cloud", ignoreCase = true) -> {
                     try {
                         val resumeCloud = resumeCloudLink(baseUrl, href) ?: return@amap
                         myCallback(resumeCloud, "[ResumeCloud]")
@@ -142,7 +144,7 @@ open class Driveleech : ExtractorApi() {
                     }
                 }
 
-                text.contains("gofile") -> {
+                text.contains("gofile", ignoreCase = true) -> {
                     loadExtractor(href, "", subtitleCallback, callback)
                 }
                 else -> {

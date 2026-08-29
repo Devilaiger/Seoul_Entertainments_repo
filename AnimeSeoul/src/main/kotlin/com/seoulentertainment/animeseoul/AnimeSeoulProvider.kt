@@ -79,16 +79,24 @@ open class AnimeSeoulProvider : MainAPI() {
         request: MainPageRequest
     ): HomePageResponse {
         val document = app.get(mainUrl + request.data + page, interceptor = cfKiller).document
-        val home = document.select("div.post-cards > article").mapNotNull {
+        val home = document.select("div.post-cards > article, article.post-item, article").mapNotNull {
             it.toSearchResult()
         }
         return newHomePageResponse(request.name, home)
     }
 
     fun Element.toSearchResult(): SearchResponse? {
-        val title = this.select("a").attr("title").replace("Download ", "")
-        val href = this.select("a").attr("href")
-        val posterUrl = this.selectFirst("div > img")?.attr("data-src") ?: this.select("div > img").attr("src")
+        val aTag = this.selectFirst("a") ?: return null
+        val href = aTag.attr("href").takeIf { it.isNotBlank() } ?: return null
+        val title = aTag.attr("title").takeIf { it.isNotBlank() }?.replace("Download ", "")?.trim()
+            ?: this.selectFirst("h2, h3, .entry-title, a")?.text()?.replace("Download ", "")?.trim()
+            ?: return null
+        if (title.isBlank()) return null
+
+        val img = this.selectFirst("img")
+        val posterUrl = img?.attr("data-src")?.takeIf { it.isNotBlank() }
+            ?: img?.attr("data-lazy-src")?.takeIf { it.isNotBlank() }
+            ?: img?.attr("src")?.takeIf { it.isNotBlank() }
 
         return newMovieSearchResponse(title, href, TvType.Anime) {
             this.posterUrl = posterUrl
@@ -96,15 +104,28 @@ open class AnimeSeoulProvider : MainAPI() {
     }
 
     override suspend fun search(query: String, page: Int): SearchResponseList? {
-        val document = app.get("$mainUrl/search/$query/page/$page", interceptor = cfKiller).document
-        val results = document.select("div.post-cards > article").mapNotNull { it.toSearchResult() }
+        val cleanQuery = query.trim()
+        val searchDoc = try {
+            val searchUrl = if (page <= 1) "$mainUrl/search/$cleanQuery/" else "$mainUrl/search/$cleanQuery/page/$page"
+            app.get(searchUrl, interceptor = cfKiller).document
+        } catch (_: Exception) {
+            val fallbackUrl = if (page <= 1) "$mainUrl/?s=$cleanQuery" else "$mainUrl/page/$page/?s=$cleanQuery"
+            app.get(fallbackUrl, interceptor = cfKiller).document
+        }
+
+        val results = searchDoc.select("div.post-cards > article, article.post-item, article").mapNotNull { 
+            it.toSearchResult() 
+        }
         val hasNext = results.isNotEmpty()
         return newSearchResponseList(results, hasNext)
     }
 
     override suspend fun load(url: String): LoadResponse? {
-        val document = app.get(url).document
+        val document = app.get(url, interceptor = cfKiller).document
         var title = document.select("meta[property=og:title]").attr("content").replace("Download ", "")
+        if (title.contains(" - AnimeFlix") || title.contains(" - MoviesMod")) {
+            title = title.substringBefore(" - Anime").substringBefore(" - Movies").trim()
+        }
         val ogTitle = title
         var posterUrl = document.select("meta[property=og:image]").attr("content")
         var description = document.select("div.imdbwp__teaser").text()
@@ -112,11 +133,13 @@ open class AnimeSeoulProvider : MainAPI() {
         val tvtype = if (div.contains("season", ignoreCase = true) || div.contains("episode", ignoreCase = true)) "series" else "movie"
         val imdbUrl = document.select("a[href*=\"imdb.com\"]").attr("href")
         val imdbId = imdbUrl.substringAfter("title/").substringBefore("/")
-        val jsonResponse = try {
-            app.get("$cinemeta_url/$tvtype/$imdbId.json").text
-        } catch (_: Exception) {
-            null
-        }
+        val jsonResponse = if (imdbId.isNotBlank()) {
+            try {
+                app.get("$cinemeta_url/$tvtype/$imdbId.json").text
+            } catch (_: Exception) {
+                null
+            }
+        } else null
         val responseData = jsonResponse?.let { tryParseJson<ResponseData>(it) }
 
         var cast: List<String> = emptyList()
@@ -215,7 +238,7 @@ open class AnimeSeoulProvider : MainAPI() {
             }
         }
         else {
-            val data = document.select("a.maxbutton-download-links").mapNotNull {
+            val data = document.select("a.maxbutton-download-links, a.maxbutton-1, a.maxbutton-5").mapNotNull {
                 var link = it.attr("href")
                 if(link.contains("url=")) {
                     val base64Value = link.substringAfter("url=")
@@ -223,10 +246,10 @@ open class AnimeSeoulProvider : MainAPI() {
                 }
 
                 val doc = app.get(link).document
-                val source = doc.select("a.maxbutton-1, a.maxbutton-5").attr("href")
-                EpisodeLink(
-                    source
-                )
+                val source = doc.select("a.maxbutton-1, a.maxbutton-5, div.text-center > a").attr("href")
+                if (source.isNotBlank()) {
+                    EpisodeLink(source)
+                } else null
             }
             return newMovieLoadResponse(title, url, TvType.Anime, data) {
                 this.posterUrl = posterUrl
@@ -254,7 +277,7 @@ open class AnimeSeoulProvider : MainAPI() {
                 source = bypass(source).toString()
             }
 
-            if(source.contains("driveseed") || source.contains("driveleech")) {
+            if(source.contains("driveseed") || source.contains("driveleech") || source.contains("animeflix.dad/getlink")) {
                 Driveleech().getUrl(source, "", subtitleCallback, callback)
             } else {
                 loadExtractor(source, "", subtitleCallback, callback)

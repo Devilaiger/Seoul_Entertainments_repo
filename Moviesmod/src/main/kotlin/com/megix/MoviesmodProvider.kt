@@ -1,4 +1,4 @@
-package com.seoulentertainment.bollyseoul
+package com.megix
 
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.network.CloudflareKiller
@@ -17,18 +17,19 @@ import kotlinx.coroutines.supervisorScope
 import java.util.concurrent.ConcurrentHashMap
 import android.util.Log
 
-open class BollySeoulProvider : MainAPI() {
-    override var mainUrl = "https://moviesleech.art"
-    override var name = "Bolly Seoul"
+open class MoviesmodProvider : MainAPI() {
+    override var mainUrl = "https://moviesmod.zone"
+    override var name = "Moviesmod"
     override val hasMainPage = true
-    override var lang = "hi"
+    override var lang = "en"
     override val hasDownloadSupport = true
     val cinemeta_url = "https://aiometadata.elfhosted.com/stremio/9197a4a9-2f5b-4911-845e-8704c520bdf7/meta"
     private val cfKiller by lazy { CloudflareKiller() }
     override val supportedTypes = setOf(
         TvType.Movie,
         TvType.TvSeries,
-        TvType.AsianDrama
+        TvType.AsianDrama,
+        TvType.Anime
     )
 
     init {
@@ -45,8 +46,8 @@ open class BollySeoulProvider : MainAPI() {
                 try {
                     // 1. Try mmodlist.org for live domain
                     val doc = app.get("https://mmodlist.org/").document
-                    val domain = doc.select("span.badge:contains(moviesleech)").firstOrNull()?.text()?.trim()
-                        ?: doc.select("a[href*='type=bollywood']").firstOrNull()?.parent()?.selectFirst("span.badge")?.text()?.trim()
+                    val domain = doc.select("span.badge:contains(moviesmod)").firstOrNull()?.text()?.trim()
+                        ?: doc.select("a[href*='type=hollywood']").firstOrNull()?.parent()?.selectFirst("span.badge")?.text()?.trim()
                     if (!domain.isNullOrBlank() && domain.startsWith("http")) {
                         return@runBlocking domain.removeSuffix("/")
                     }
@@ -57,7 +58,7 @@ open class BollySeoulProvider : MainAPI() {
                     val response = app.get("https://raw.githubusercontent.com/SaurabhKaperwan/Utils/refs/heads/main/urls.json")
                     val json = response.text
                     val jsonObject = JSONObject(json)
-                    val opt = jsonObject.optString("moviesleech")
+                    val opt = jsonObject.optString("moviesmod")
                     if (opt.isNotBlank()) return@runBlocking opt
                 } catch (_: Exception) {}
 
@@ -68,10 +69,9 @@ open class BollySeoulProvider : MainAPI() {
 
     override val mainPage = mainPageOf(
         "/page/" to "Home",
-        "/movies/bollywood-movies/page/" to "Bollywood Movies",
-        "/web-series/hindi-web-series/page/" to "Hindi Web Series",
-        "/movies/hollywood-movies/page/" to "Hollywood Hindi Dubbed",
-        "/movies/south-hindi-movies/page/" to "South Hindi Dubbed",
+        "/web-series/on-going/page/" to "Latest Web Series",
+        "/movies/page/" to "Latest Movies",
+        "/animated-web-series/page/" to "Anime",
     )
 
     override suspend fun getMainPage(
@@ -123,8 +123,8 @@ open class BollySeoulProvider : MainAPI() {
     override suspend fun load(url: String): LoadResponse? {
         val document = app.get(url, interceptor = cfKiller).document
         var title = document.select("meta[property=og:title]").attr("content").replace("Download ", "")
-        if (title.contains(" - MoviesLeech") || title.contains(" - MoviesMod")) {
-            title = title.substringBefore(" - Movies").trim()
+        if (title.contains(" - MoviesMod")) {
+            title = title.substringBefore(" - MoviesMod").trim()
         }
         val ogTitle = title
         var posterUrl = document.select("meta[property=og:image]").attr("content")

@@ -217,5 +217,72 @@
         "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/MPlayerProvider.cs3",
         "name": "MPlayerProvider",
         "jarHash": "sha256-7f72a7adbadf5cb1272917ebbabf2f0ee62ef221a3fa41c7880fef39f70f8e68"
+    },
+    {
+        "iconUrl": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/master/Moviesmod/icon.png",
+        "fileHash": "sha256-b7ad0ca2a3cec11c6c0dd7b802a4cd4a53b18dce5330716e6d483d8cdd568366",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
+        "fileSize": 43576,
+        "status": 1,
+        "language": "en",
+        "authors": [
+            "SeoulEntertainment"
+        ],
+        "tvTypes": [
+            "TvSeries",
+            "Movie",
+            "AsianDrama",
+            "Anime"
+        ],
+        "version": 33,
+        "internalName": "Moviesmod",
+        "description": "Hollywood and Multi Audio Movies & Series Provider",
+        "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/Moviesmod.cs3",
+        "name": "Moviesmod"
+    },
+    {
+        "iconUrl": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/master/BollySeoul/icon.png",
+        "fileHash": "sha256-369a8a7ffa3a1db64f9b399a1bb8c963042c6b93cd8e6768816ea182ee8a7a0a",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
+        "fileSize": 42249,
+        "status": 1,
+        "language": "hi",
+        "authors": [
+            "SeoulEntertainment"
+        ],
+        "tvTypes": [
+            "TvSeries",
+            "Movie",
+            "AsianDrama"
+        ],
+        "version": 2,
+        "internalName": "BollySeoul",
+        "description": "Bollywood and Hindi Dubbed Movies and Series",
+        "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/BollySeoul.cs3",
+        "name": "Bolly Seoul"
+    },
+    {
+        "iconUrl": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/master/AnimeSeoul/icon.png",
+        "fileHash": "sha256-e9fb5586525e6f2743bbf07629f2ae3a96c2e143c8182483c0e3793ccc59c2cd",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
+        "fileSize": 42228,
+        "status": 1,
+        "language": "en",
+        "authors": [
+            "SeoulEntertainment"
+        ],
+        "tvTypes": [
+            "Anime",
+            "TvSeries",
+            "Movie"
+        ],
+        "version": 2,
+        "internalName": "AnimeSeoul",
+        "description": "Anime Series and Movies with Dual Audio & Sub",
+        "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/AnimeSeoul.cs3",
+        "name": "Anime Seoul"
     }
-]
+]

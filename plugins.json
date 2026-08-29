@@ -1,12 +1,56 @@
 [
     {
+        "iconUrl": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/AnimeSeoul/icon.png",
+        "fileHash": "sha256-42a3a5092bde81d4813843249eaa34480f9c805f56914e2eb5480717905a2494",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
+        "fileSize": 41246,
+        "status": 1,
+        "language": "en",
+        "authors": [
+            "SeoulEntertainment"
+        ],
+        "tvTypes": [
+            "Anime",
+            "TvSeries",
+            "Movie"
+        ],
+        "version": 1,
+        "internalName": "AnimeSeoul",
+        "description": "Anime Series and Movies with Dual Audio & Sub",
+        "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/AnimeSeoul.cs3",
+        "name": "AnimeSeoul"
+    },
+    {
+        "iconUrl": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/BollySeoul/icon.png",
+        "fileHash": "sha256-ada4f01639f869015335198c160985efcda2baeb595dba6a9941341c1ec57456",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
+        "fileSize": 41246,
+        "status": 1,
+        "language": "hi",
+        "authors": [
+            "SeoulEntertainment"
+        ],
+        "tvTypes": [
+            "TvSeries",
+            "Movie",
+            "AsianDrama"
+        ],
+        "version": 1,
+        "internalName": "BollySeoul",
+        "description": "Bollywood and Hindi Dubbed Movies and Series",
+        "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/BollySeoul.cs3",
+        "name": "BollySeoul"
+    },
+    {
         "iconUrl": "https://github.com/NivinCNC/CNCVerse-Cloud-Stream-Extension/raw/refs/heads/master/CastleTvProvider/icon.png",
         "fileHash": "sha256-e80a3840e7b1a3cdb1cdee329c6a1fe47bacc25e6bd00c43038d1bc0645f7be3",
         "apiVersion": 1,
         "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
         "fileSize": 64713,
         "status": 1,
-        "language": "en",
+        "language": "ta",
         "authors": [
             "seoulentertainments"
         ],
@@ -94,7 +138,7 @@
         "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
         "fileSize": 70391,
         "status": 1,
-        "language": "en",
+        "language": "ta",
         "authors": [
             "seoulentertainments"
         ],
@@ -115,7 +159,7 @@
         "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
         "fileSize": 68043,
         "status": 1,
-        "language": "en",
+        "language": "ta",
         "authors": [
             "seoulentertainments"
         ],
@@ -135,7 +179,7 @@
         "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
         "fileSize": 49242,
         "status": 1,
-        "language": "en",
+        "language": "bn",
         "authors": [
             "seoulentertainments"
         ],

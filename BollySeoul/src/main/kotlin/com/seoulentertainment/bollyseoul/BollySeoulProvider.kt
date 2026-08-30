@@ -31,39 +31,28 @@ open class BollySeoulProvider : MainAPI() {
         TvType.AsianDrama
     )
 
-    init {
-        runBlocking {
-            basemainUrl?.let {
-                mainUrl = it
-            }
-        }
-    }
+    private var cachedDomain: String? = null
 
-    companion object {
-        val basemainUrl: String? by lazy {
-            runBlocking {
-                try {
-                    // 1. Try mmodlist.org for live domain
-                    val doc = app.get("https://mmodlist.org/").document
-                    val domain = doc.select("span.badge:contains(moviesleech)").firstOrNull()?.text()?.trim()
-                        ?: doc.select("a[href*='type=bollywood']").firstOrNull()?.parent()?.selectFirst("span.badge")?.text()?.trim()
-                    if (!domain.isNullOrBlank() && domain.startsWith("http")) {
-                        return@runBlocking domain.removeSuffix("/")
-                    }
-                } catch (_: Exception) {}
+    private suspend fun getBaseDomain(): String {
+        if (cachedDomain != null) return cachedDomain!!
+        val resolved = try {
+            val doc = app.get("https://mmodlist.org/").document
+            val domain = doc.select("span.badge:contains(moviesleech)").firstOrNull()?.text()?.trim()
+                ?: doc.select("a[href*='type=bollywood']").firstOrNull()?.parent()?.selectFirst("span.badge")?.text()?.trim()
+            if (!domain.isNullOrBlank() && domain.startsWith("http")) domain.removeSuffix("/") else null
+        } catch (_: Exception) { null }
 
-                try {
-                    // 2. Try raw urls.json fallback
-                    val response = app.get("https://raw.githubusercontent.com/SaurabhKaperwan/Utils/refs/heads/main/urls.json")
-                    val json = response.text
-                    val jsonObject = JSONObject(json)
-                    val opt = jsonObject.optString("moviesleech")
-                    if (opt.isNotBlank()) return@runBlocking opt
-                } catch (_: Exception) {}
+        val finalDomain = resolved ?: try {
+            val response = app.get("https://raw.githubusercontent.com/SaurabhKaperwan/Utils/refs/heads/main/urls.json")
+            val json = response.text
+            val jsonObject = JSONObject(json)
+            val opt = jsonObject.optString("moviesleech")
+            if (opt.isNotBlank()) opt.removeSuffix("/") else null
+        } catch (_: Exception) { null } ?: mainUrl
 
-                null
-            }
-        }
+        cachedDomain = finalDomain
+        mainUrl = finalDomain
+        return finalDomain
     }
 
     override val mainPage = mainPageOf(
@@ -78,7 +67,8 @@ open class BollySeoulProvider : MainAPI() {
         page: Int,
         request: MainPageRequest
     ): HomePageResponse {
-        val document = app.get(mainUrl + request.data + page, interceptor = cfKiller).document
+        val baseUrl = getBaseDomain()
+        val document = app.get(baseUrl + request.data + page, interceptor = cfKiller).document
         val home = document.select("div.post-cards > article, article.post-item, article").mapNotNull {
             it.toSearchResult()
         }
@@ -104,12 +94,14 @@ open class BollySeoulProvider : MainAPI() {
     }
 
     override suspend fun search(query: String, page: Int): SearchResponseList? {
+        val baseUrl = getBaseDomain()
         val cleanQuery = query.trim()
+        val encodedQuery = java.net.URLEncoder.encode(cleanQuery, "UTF-8")
         val searchDoc = try {
-            val searchUrl = if (page <= 1) "$mainUrl/search/$cleanQuery/" else "$mainUrl/search/$cleanQuery/page/$page"
+            val searchUrl = if (page <= 1) "$baseUrl/search/$encodedQuery/" else "$baseUrl/search/$encodedQuery/page/$page"
             app.get(searchUrl, interceptor = cfKiller).document
         } catch (_: Exception) {
-            val fallbackUrl = if (page <= 1) "$mainUrl/?s=$cleanQuery" else "$mainUrl/page/$page/?s=$cleanQuery"
+            val fallbackUrl = if (page <= 1) "$baseUrl/?s=$encodedQuery" else "$baseUrl/page/$page/?s=$encodedQuery"
             app.get(fallbackUrl, interceptor = cfKiller).document
         }
 
@@ -121,7 +113,9 @@ open class BollySeoulProvider : MainAPI() {
     }
 
     override suspend fun load(url: String): LoadResponse? {
-        val document = app.get(url, interceptor = cfKiller).document
+        val baseUrl = getBaseDomain()
+        val fixedUrl = if (url.startsWith("http")) url else "$baseUrl/$url"
+        val document = app.get(fixedUrl, interceptor = cfKiller).document
         var title = document.select("meta[property=og:title]").attr("content").replace("Download ", "")
         if (title.contains(" - MoviesLeech") || title.contains(" - MoviesMod")) {
             title = title.substringBefore(" - Movies").trim()

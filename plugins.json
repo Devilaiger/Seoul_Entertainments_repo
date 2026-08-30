@@ -176,10 +176,10 @@
     },
     {
         "iconUrl": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/master/Moviesmod/icon.png",
-        "fileHash": "sha256-3676cbe0f7279e687b55e360ad14bd1a66b30d48f642e3d7b8cb3493831d3fd4",
+        "fileHash": "sha256-58f10bd33e0614e66a28e2911ab93d0aadc73842b06858ddd11a55b9c2195c0c",
         "apiVersion": 1,
         "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
-        "fileSize": 46662,
+        "fileSize": 47193,
         "status": 1,
         "language": "en",
         "authors": [
@@ -191,7 +191,7 @@
             "AsianDrama",
             "Anime"
         ],
-        "version": 34,
+        "version": 35,
         "internalName": "Moviesmod",
         "description": "Hollywood and Multi Audio Movies & Series Provider",
         "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/Moviesmod.cs3",

@@ -1,244 +1,244 @@
 [
-    {
-        "iconUrl": "https://github.com/NivinCNC/CNCVerse-Cloud-Stream-Extension/raw/refs/heads/master/CastleTvProvider/icon.png",
-        "fileHash": "sha256-e80a3840e7b1a3cdb1cdee329c6a1fe47bacc25e6bd00c43038d1bc0645f7be3",
-        "apiVersion": 1,
-        "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
-        "fileSize": 64713,
-        "status": 1,
-        "language": "ta",
-        "authors": [
-            "seoulentertainments"
-        ],
-        "tvTypes": [
-            "Movie",
-            "TvSeries"
-        ],
-        "version": 30,
-        "internalName": "CastleTvProvider",
-        "description": "Castle TV Movies and Series Provider",
-        "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/CastleTvProvider.cs3",
-        "name": "CastleTvProvider"
-    },
-    {
-        "iconUrl": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/master/CineStream/icon.png",
-        "fileHash": "sha256-794c3dab2b2d459cde60b9a4641921fd9f0781202a757011495686e42cf3e868",
-        "apiVersion": 1,
-        "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
-        "fileSize": 712685,
-        "status": 1,
-        "language": "en",
-        "authors": [
-            "megix",
-            "seoulentertainments"
-        ],
-        "tvTypes": [
-            "TvSeries",
-            "Movie",
-            "AsianDrama",
-            "Anime",
-            "Torrent"
-        ],
-        "version": 473,
-        "internalName": "CineStream",
-        "description": "One stop solution for Movies, Series, Anime, AsianDrama and Torrents",
-        "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/CineStream.cs3",
-        "name": "CineStream"
-    },
-    {
-        "iconUrl": "https://www.google.com/s2/favicons?domain=rezka.ag&sz=%size%",
-        "fileHash": "sha256-c59389b0a0128fc9d08b94d9a317e20e928519c60a0330073fc27e27df0876bd",
-        "apiVersion": 1,
-        "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
-        "fileSize": 39623,
-        "status": 1,
-        "language": "ru",
-        "authors": [
-            "SeoulEntertainment"
-        ],
-        "tvTypes": [
-            "AsianDrama",
-            "Anime",
-            "TvSeries",
-            "Movie"
-        ],
-        "version": 27,
-        "internalName": "HDrezkaProvider",
-        "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/HDrezkaProvider.cs3",
-        "name": "HDrezkaProvider"
-    },
-    {
-        "fileHash": "sha256-8b57dbe814ef96aff30d83d03eca3040b20cc6b377f027d665e684265b14be28",
-        "apiVersion": 1,
-        "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
-        "fileSize": 83909,
-        "status": 1,
-        "language": "en",
-        "authors": [
-            "seoulentertainments"
-        ],
-        "tvTypes": [
-            "Movie",
-            "TvSeries"
-        ],
-        "version": 2,
-        "internalName": "KatMovieHDProvider",
-        "description": "KatMovieHD Provider (In-House)",
-        "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/KatMovieHDProvider.cs3",
-        "name": "KatMovieHDProvider"
-    },
-    {
-        "iconUrl": "https://github.com/NivinCNC/CNCVerse-Cloud-Stream-Extension/raw/refs/heads/master/MovieBoxProvider/icon.png",
-        "fileHash": "sha256-22044f683620c07c0ea5c2a0768ad9c42fdeec7c49e245353d2d94eb50267e96",
-        "apiVersion": 1,
-        "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
-        "fileSize": 70391,
-        "status": 1,
-        "language": "ta",
-        "authors": [
-            "seoulentertainments"
-        ],
-        "tvTypes": [
-            "Movie",
-            "TvSeries"
-        ],
-        "version": 32,
-        "internalName": "MovieBoxProvider",
-        "description": "Multi Language Movies and Series Provider",
-        "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/MovieBoxProvider.cs3",
-        "name": "MovieBoxProvider"
-    },
-    {
-        "iconUrl": "https://github.com/NivinCNC/CNCVerse-Cloud-Stream-Extension/raw/refs/heads/master/MovieBoxProviderIN/icon.png",
-        "fileHash": "sha256-9aa6d5042e138fb9f9142c9b92d2318b8be0f6daeb49f03f8274a8de30e1d384",
-        "apiVersion": 1,
-        "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
-        "fileSize": 68043,
-        "status": 1,
-        "language": "ta",
-        "authors": [
-            "seoulentertainments"
-        ],
-        "tvTypes": [
-            "Movie",
-            "TvSeries"
-        ],
-        "version": 34,
-        "internalName": "MovieBoxProviderIN",
-        "description": "Multi Language Movies and Series Provider (Local homepage based on region)",
-        "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/MovieBoxProviderIN.cs3",
-        "name": "MovieBoxProviderIN"
-    },
-    {
-        "fileHash": "sha256-c0f638fbed9e18aa785d4f8cda54e6d4ea7f530edcdde3572dfb616fe343085b",
-        "apiVersion": 1,
-        "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
-        "fileSize": 49242,
-        "status": 1,
-        "language": "bn",
-        "authors": [
-            "seoulentertainments"
-        ],
-        "tvTypes": [
-            "Movie",
-            "TvSeries"
-        ],
-        "version": 3,
-        "internalName": "MovieLinkBDProvider",
-        "description": "MovieLinkBD Provider",
-        "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/MovieLinkBDProvider.cs3",
-        "name": "MovieLinkBDProvider"
-    },
-    {
-        "iconUrl": "https://www.google.com/s2/favicons?domain=www.mxplayer.in&sz=%size%",
-        "jarFileSize": 509425,
-        "fileHash": "sha256-32d0a412abd720aa44922494433750b3c18a8951dce81bfb46d7cc7640206b32",
-        "apiVersion": 1,
-        "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
-        "fileSize": 93586,
-        "status": 1,
-        "language": "hi",
-        "authors": [
-            "seoulentertainments"
-        ],
-        "tvTypes": [
-            "AsianDrama",
-            "TvSeries",
-            "Movie"
-        ],
-        "version": 7,
-        "internalName": "MPlayerProvider",
-        "jarUrl": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/MPlayerProvider.jar",
-        "description": "Indian Movies/Series/Kdrama(Hindi Dubbed)",
-        "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/MPlayerProvider.cs3",
-        "name": "MPlayerProvider",
-        "jarHash": "sha256-7f72a7adbadf5cb1272917ebbabf2f0ee62ef221a3fa41c7880fef39f70f8e68"
-    },
-    {
-        "iconUrl": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/master/Moviesmod/icon.png",
-        "fileHash": "sha256-58f10bd33e0614e66a28e2911ab93d0aadc73842b06858ddd11a55b9c2195c0c",
-        "apiVersion": 1,
-        "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
-        "fileSize": 47193,
-        "status": 1,
-        "language": "en",
-        "authors": [
-            "SeoulEntertainment"
-        ],
-        "tvTypes": [
-            "TvSeries",
-            "Movie",
-            "AsianDrama",
-            "Anime"
-        ],
-        "version": 35,
-        "internalName": "Moviesmod",
-        "description": "Hollywood and Multi Audio Movies & Series Provider",
-        "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/Moviesmod.cs3",
-        "name": "Moviesmod"
-    },
-    {
-        "iconUrl": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/master/BollySeoul/icon.png",
-        "fileHash": "sha256-1db041ee602207a8123184e52fc9282cbda712529776511956e5ec491116e483",
-        "apiVersion": 1,
-        "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
-        "fileSize": 45080,
-        "status": 1,
-        "language": "hi",
-        "authors": [
-            "SeoulEntertainment"
-        ],
-        "tvTypes": [
-            "TvSeries",
-            "Movie",
-            "AsianDrama"
-        ],
-        "version": 3,
-        "internalName": "BollySeoul",
-        "description": "Bollywood and Hindi Dubbed Movies and Series",
-        "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/BollySeoul.cs3",
-        "name": "Bolly Seoul"
-    },
-    {
-        "iconUrl": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/master/AnimeSeoul/icon.png",
-        "fileHash": "sha256-2ea47b83e392c4b2f1ba28857de09ac8ba319abb65397481ba34c41c7462ea4d",
-        "apiVersion": 1,
-        "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
-        "fileSize": 45090,
-        "status": 1,
-        "language": "en",
-        "authors": [
-            "SeoulEntertainment"
-        ],
-        "tvTypes": [
-            "Anime",
-            "TvSeries",
-            "Movie"
-        ],
-        "version": 3,
-        "internalName": "AnimeSeoul",
-        "description": "Anime Series and Movies with Dual Audio & Sub",
-        "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/AnimeSeoul.cs3",
-        "name": "Anime Seoul"
-    }
+  {
+    "iconUrl": "https://github.com/NivinCNC/CNCVerse-Cloud-Stream-Extension/raw/refs/heads/master/CastleTvProvider/icon.png",
+    "fileHash": "sha256-e80a3840e7b1a3cdb1cdee329c6a1fe47bacc25e6bd00c43038d1bc0645f7be3",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
+    "fileSize": 64713,
+    "status": 1,
+    "language": "ta",
+    "authors": [
+      "seoulentertainments"
+    ],
+    "tvTypes": [
+      "Movie",
+      "TvSeries"
+    ],
+    "version": 30,
+    "internalName": "CastleTvProvider",
+    "description": "Castle TV Movies and Series Provider",
+    "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/CastleTvProvider.cs3",
+    "name": "CastleTvProvider"
+  },
+  {
+    "iconUrl": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/master/CineStream/icon.png",
+    "fileHash": "sha256-794c3dab2b2d459cde60b9a4641921fd9f0781202a757011495686e42cf3e868",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
+    "fileSize": 712685,
+    "status": 1,
+    "language": "en",
+    "authors": [
+      "megix",
+      "seoulentertainments"
+    ],
+    "tvTypes": [
+      "TvSeries",
+      "Movie",
+      "AsianDrama",
+      "Anime",
+      "Torrent"
+    ],
+    "version": 473,
+    "internalName": "CineStream",
+    "description": "One stop solution for Movies, Series, Anime, AsianDrama and Torrents",
+    "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/CineStream.cs3",
+    "name": "CineStream"
+  },
+  {
+    "iconUrl": "https://www.google.com/s2/favicons?domain=rezka.ag&sz=%size%",
+    "fileHash": "sha256-c59389b0a0128fc9d08b94d9a317e20e928519c60a0330073fc27e27df0876bd",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
+    "fileSize": 39623,
+    "status": 1,
+    "language": "ru",
+    "authors": [
+      "SeoulEntertainment"
+    ],
+    "tvTypes": [
+      "AsianDrama",
+      "Anime",
+      "TvSeries",
+      "Movie"
+    ],
+    "version": 27,
+    "internalName": "HDrezkaProvider",
+    "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/HDrezkaProvider.cs3",
+    "name": "HDrezkaProvider"
+  },
+  {
+    "fileHash": "sha256-8b57dbe814ef96aff30d83d03eca3040b20cc6b377f027d665e684265b14be28",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
+    "fileSize": 83909,
+    "status": 1,
+    "language": "en",
+    "authors": [
+      "seoulentertainments"
+    ],
+    "tvTypes": [
+      "Movie",
+      "TvSeries"
+    ],
+    "version": 2,
+    "internalName": "KatMovieHDProvider",
+    "description": "KatMovieHD Provider (In-House)",
+    "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/KatMovieHDProvider.cs3",
+    "name": "KatMovieHDProvider"
+  },
+  {
+    "iconUrl": "https://github.com/NivinCNC/CNCVerse-Cloud-Stream-Extension/raw/refs/heads/master/MovieBoxProvider/icon.png",
+    "fileHash": "sha256-5088c84c8d4ca85d1f67704e92e6666ee2a44c394e477cc53972e673d62d71fd",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
+    "fileSize": 76225,
+    "status": 1,
+    "language": "ta",
+    "authors": [
+      "seoulentertainments"
+    ],
+    "tvTypes": [
+      "Movie",
+      "TvSeries"
+    ],
+    "version": 33,
+    "internalName": "MovieBoxProvider",
+    "description": "Multi Language Movies and Series Provider",
+    "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/MovieBoxProvider.cs3",
+    "name": "MovieBoxProvider"
+  },
+  {
+    "iconUrl": "https://github.com/NivinCNC/CNCVerse-Cloud-Stream-Extension/raw/refs/heads/master/MovieBoxProviderIN/icon.png",
+    "fileHash": "sha256-08a7e2bbfd7480d440c52c01d916ff37e6f5d6af25eff5b7c930224e499ba8a4",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
+    "fileSize": 74122,
+    "status": 1,
+    "language": "ta",
+    "authors": [
+      "seoulentertainments"
+    ],
+    "tvTypes": [
+      "Movie",
+      "TvSeries"
+    ],
+    "version": 35,
+    "internalName": "MovieBoxProviderIN",
+    "description": "Multi Language Movies and Series Provider (Local homepage based on region)",
+    "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/MovieBoxProviderIN.cs3",
+    "name": "MovieBoxProviderIN"
+  },
+  {
+    "fileHash": "sha256-c0f638fbed9e18aa785d4f8cda54e6d4ea7f530edcdde3572dfb616fe343085b",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
+    "fileSize": 49242,
+    "status": 1,
+    "language": "bn",
+    "authors": [
+      "seoulentertainments"
+    ],
+    "tvTypes": [
+      "Movie",
+      "TvSeries"
+    ],
+    "version": 3,
+    "internalName": "MovieLinkBDProvider",
+    "description": "MovieLinkBD Provider",
+    "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/MovieLinkBDProvider.cs3",
+    "name": "MovieLinkBDProvider"
+  },
+  {
+    "iconUrl": "https://www.google.com/s2/favicons?domain=www.mxplayer.in&sz=%size%",
+    "jarFileSize": 509425,
+    "fileHash": "sha256-32d0a412abd720aa44922494433750b3c18a8951dce81bfb46d7cc7640206b32",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
+    "fileSize": 93586,
+    "status": 1,
+    "language": "hi",
+    "authors": [
+      "seoulentertainments"
+    ],
+    "tvTypes": [
+      "AsianDrama",
+      "TvSeries",
+      "Movie"
+    ],
+    "version": 7,
+    "internalName": "MPlayerProvider",
+    "jarUrl": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/MPlayerProvider.jar",
+    "description": "Indian Movies/Series/Kdrama(Hindi Dubbed)",
+    "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/MPlayerProvider.cs3",
+    "name": "MPlayerProvider",
+    "jarHash": "sha256-7f72a7adbadf5cb1272917ebbabf2f0ee62ef221a3fa41c7880fef39f70f8e68"
+  },
+  {
+    "iconUrl": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/master/Moviesmod/icon.png",
+    "fileHash": "sha256-58f10bd33e0614e66a28e2911ab93d0aadc73842b06858ddd11a55b9c2195c0c",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
+    "fileSize": 47193,
+    "status": 1,
+    "language": "en",
+    "authors": [
+      "SeoulEntertainment"
+    ],
+    "tvTypes": [
+      "TvSeries",
+      "Movie",
+      "AsianDrama",
+      "Anime"
+    ],
+    "version": 35,
+    "internalName": "Moviesmod",
+    "description": "Hollywood and Multi Audio Movies & Series Provider",
+    "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/Moviesmod.cs3",
+    "name": "Moviesmod"
+  },
+  {
+    "iconUrl": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/master/BollySeoul/icon.png",
+    "fileHash": "sha256-1db041ee602207a8123184e52fc9282cbda712529776511956e5ec491116e483",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
+    "fileSize": 45080,
+    "status": 1,
+    "language": "hi",
+    "authors": [
+      "SeoulEntertainment"
+    ],
+    "tvTypes": [
+      "TvSeries",
+      "Movie",
+      "AsianDrama"
+    ],
+    "version": 3,
+    "internalName": "BollySeoul",
+    "description": "Bollywood and Hindi Dubbed Movies and Series",
+    "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/BollySeoul.cs3",
+    "name": "Bolly Seoul"
+  },
+  {
+    "iconUrl": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/master/AnimeSeoul/icon.png",
+    "fileHash": "sha256-2ea47b83e392c4b2f1ba28857de09ac8ba319abb65397481ba34c41c7462ea4d",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
+    "fileSize": 45090,
+    "status": 1,
+    "language": "en",
+    "authors": [
+      "SeoulEntertainment"
+    ],
+    "tvTypes": [
+      "Anime",
+      "TvSeries",
+      "Movie"
+    ],
+    "version": 3,
+    "internalName": "AnimeSeoul",
+    "description": "Anime Series and Movies with Dual Audio & Sub",
+    "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/AnimeSeoul.cs3",
+    "name": "Anime Seoul"
+  }
 ]

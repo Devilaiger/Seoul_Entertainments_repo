@@ -247,9 +247,9 @@
     "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/KatDramaProvider.cs3",
     "name": "KatDramaProvider",
     "internalName": "KatDramaProvider",
-    "fileSize": 69371,
-    "fileHash": "sha256-df670a3e283d02cb1f69ae67ddee1046f12a9a89fed1a23b28fb2b3e1292cf1a",
-    "version": 2,
+    "fileSize": 80009,
+    "fileHash": "sha256-528d9ee304f4409123df493dc05ffae03d4e97ab5a0c510a305ff3f5224853a9",
+    "version": 3,
     "status": 1,
     "language": "ko",
     "authors": [
@@ -333,7 +333,7 @@
     "status": 1,
     "language": "hi",
     "authors": [
-      "megix"
+      "seoulentertainments"
     ],
     "tvTypes": [
       "TvSeries",
@@ -356,7 +356,7 @@
     "status": 1,
     "language": "hi",
     "authors": [
-      "Phisher98"
+      "seoulentertainments"
     ],
     "tvTypes": [
       "Movie",
@@ -385,5 +385,26 @@
       "TvSeries"
     ],
     "description": "Korean Dramas, Movies and Variety Provider"
+  },
+  {
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
+    "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/FourKHDHub.cs3",
+    "name": "FourKHDHub",
+    "internalName": "FourKHDHub",
+    "fileSize": 67475,
+    "fileHash": "sha256-15a78f247291d08264e627dbe4d644597de0fac667542687fb2080947e308753",
+    "version": 35,
+    "status": 1,
+    "language": "en",
+    "authors": [
+      "SeoulEntertainment"
+    ],
+    "tvTypes": [
+      "Movie",
+      "TvSeries"
+    ],
+    "description": "4K Movies Extension by HDHUB4U",
+    "iconUrl": "https://raw.githubusercontent.com/phisher98/TVVVV/refs/heads/main/Icons/4KHDHUB-Bright-Logo.png"
   }
 ]

@@ -89,10 +89,10 @@
   },
   {
     "iconUrl": "https://github.com/NivinCNC/CNCVerse-Cloud-Stream-Extension/raw/refs/heads/master/MovieBoxProvider/icon.png",
-    "fileHash": "sha256-92d342a3c21569073e8155d3e2a16b1e3063e2ae8c8d6f8ebdf595974dc22cad",
+    "fileHash": "sha256-0d3c5ccf40701e188e07bee58632f050024c586ac4142d30ea6e6f9955a3957c",
     "apiVersion": 1,
     "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
-    "fileSize": 90577,
+    "fileSize": 123383,
     "status": 1,
     "language": "ta",
     "authors": [
@@ -102,7 +102,7 @@
       "Movie",
       "TvSeries"
     ],
-    "version": 34,
+    "version": 37,
     "internalName": "MovieBoxProvider",
     "description": "Multi Language Movies and Series Provider",
     "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/MovieBoxProvider.cs3",
@@ -110,10 +110,10 @@
   },
   {
     "iconUrl": "https://github.com/NivinCNC/CNCVerse-Cloud-Stream-Extension/raw/refs/heads/master/MovieBoxProviderIN/icon.png",
-    "fileHash": "sha256-c4d1676394d3badddf8e9762e442be95e93996f77a95c0c9bd9610bdf794a86a",
+    "fileHash": "sha256-6329c4da6f5a800da00e60b5b6d709544bb64cc2a913850dbf44c361de8e71b1",
     "apiVersion": 1,
     "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
-    "fileSize": 90602,
+    "fileSize": 124068,
     "status": 1,
     "language": "ta",
     "authors": [
@@ -123,7 +123,7 @@
       "Movie",
       "TvSeries"
     ],
-    "version": 36,
+    "version": 39,
     "internalName": "MovieBoxProviderIN",
     "description": "Multi Language Movies and Series Provider (Local homepage based on region)",
     "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/MovieBoxProviderIN.cs3",

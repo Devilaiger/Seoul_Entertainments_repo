@@ -1,12 +1,12 @@
 [
   {
     "iconUrl": "https://github.com/NivinCNC/CNCVerse-Cloud-Stream-Extension/raw/refs/heads/master/CastleTvProvider/icon.png",
-    "fileHash": "sha256-e80a3840e7b1a3cdb1cdee329c6a1fe47bacc25e6bd00c43038d1bc0645f7be3",
+    "fileHash": "sha256-c42bd0e818bc5bb363021e6ec3f08c46663fbdebcc3e72f075fc545e912f1aaa",
     "apiVersion": 1,
     "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
-    "fileSize": 64713,
+    "fileSize": 78182,
     "status": 1,
-    "language": "ta",
+    "language": "en",
     "authors": [
       "seoulentertainments"
     ],
@@ -14,7 +14,7 @@
       "Movie",
       "TvSeries"
     ],
-    "version": 30,
+    "version": 42,
     "internalName": "CastleTvProvider",
     "description": "Castle TV Movies and Series Provider",
     "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/CastleTvProvider.cs3",

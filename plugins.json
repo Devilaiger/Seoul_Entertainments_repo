@@ -406,5 +406,26 @@
     ],
     "description": "4K Movies Extension by HDHUB4U",
     "iconUrl": "https://raw.githubusercontent.com/phisher98/TVVVV/refs/heads/main/Icons/4KHDHUB-Bright-Logo.png"
+  },
+  {
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/Devilaiger/Seoul_Entertainments_repo",
+    "url": "https://raw.githubusercontent.com/Devilaiger/Seoul_Entertainments_repo/builds/CocoflixProvider.cs3",
+    "name": "CocoflixProvider",
+    "internalName": "CocoflixProvider",
+    "fileSize": 94999,
+    "fileHash": "sha256-252293dfb63269a352de67f27b82396c23443a5b31cb5ea5acd484fa4bd1268e",
+    "version": 111,
+    "status": 1,
+    "language": "ta",
+    "authors": [
+      "SeoulEntertainment"
+    ],
+    "tvTypes": [
+      "Movie",
+      "TvSeries"
+    ],
+    "description": "Stream movies and series from Cocoflix",
+    "iconUrl": "https://raw.githubusercontent.com/Devilaiger/Korean_insta/main/Server_for_Korean_insta/CocoflixProvider/logo.png"
   }
 ]
